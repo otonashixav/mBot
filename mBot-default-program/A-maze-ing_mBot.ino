@@ -1,20 +1,30 @@
 #include <Arduino.h> // should be included automatically when compiled; includes stdbool
 #include "pitches.h" // note definitions for playing MUSIC
 
-// time definitions
+// constant definitions
 #define ULTRASONIC_TIMEOUT 30000
+#define ULTRASONIC_THRESHOLD
+#define INFRARED_THRESHOLD
+#define MIC_THRESHOLD
+#define MAX_SPEED 255
+#define ADJUSTMENT_SPEED 200
 
 // pin definitions
+// Port 1 contains 2 digital pins 11 and 12
+// Port 2 contains 2 digital pins 9 and 10
+// Port 3 contains 2 analog pins A2 and A3
+// Port 4 contains 2 analog pins A0 and A1
 #define ULTRASONIC 12  // ultrasonic sensor
-#define LINE           // line sensor
-#define LIGHT          // light sensor
-#define LED            // top led
-#define IR_L           // left infrared sensor
-#define IR_R           // right infrared sensor
-#define MIC_LOW        // low pass mic output
-#define MIC_HIGH       // high pass mic output
-#define MOTOR_L        // left motor
-#define MOTOR_R        // right motor
+#define LINE 10        // line sensor
+#define LIGHT A6       // light sensor
+#define LED 13         // top led
+#define IR_L A0        // left infrared sensor
+#define IR_R A2        // right infrared sensor
+#define MIC_LOW A1     // low pass mic output
+#define MIC_HIGH A3    // high pass mic output
+#define MOTOR_L M1     // left motor
+#define MOTOR_R M2     // right motor
+#define BUZZER 8       // buzzer
 
 // motor functions
 void turn_left() {
@@ -58,10 +68,6 @@ long read_ultrasonic_sensor() {
     return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-bool read_line_sensor() {
-    
-}
-
 // challenge functions
 
 int solve_color() {
@@ -81,7 +87,7 @@ void setup() {
 }
 
 void loop() {
-    if (read_line_sensor() == HIGH) {
+    if (digitalRead(LINE) == HIGH) {
         solve_challenge();
     } else {
         // read ir sensors and determine if correction necessary, else straight

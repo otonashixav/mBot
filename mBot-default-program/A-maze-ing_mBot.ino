@@ -9,6 +9,7 @@
 #define MIC_THRESHOLD
 #define MAX_SPEED 255
 #define ADJUSTMENT_SPEED 200
+#define LED_DELAY 40
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -16,8 +17,7 @@
 // Port 3 contains 2 analog pins A2 and A3
 // Port 4 contains 2 analog pins A0 and A1
 #define ULTRASONIC 12  // ultrasonic sensor
-#define LINR_L 9       // left line sensor  
-#define LINE_R 10      // right line sensor
+#define LINE 9         // left line sensor
 #define LIGHT A6       // light sensor
 #define LED 13         // top led
 #define IR_L A0        // left infrared sensor
@@ -77,7 +77,7 @@ long read_ultrasonic_sensor() {
 }
 
 long read_ldr_sensor() {
-    analogRead(LIGHT);
+    return analogRead(LIGHT);
 }
 
 // challenge functions
@@ -95,6 +95,7 @@ int solve_challenge() {
 }
 
 void setup() {
+    
 }
 
 void loop() {

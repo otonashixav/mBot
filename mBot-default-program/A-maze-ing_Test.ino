@@ -29,10 +29,10 @@
 #define BUZZER 8       // buzzer
 
 // assign classes
-    MeDCMotor motor_l(MOTOR_L);
-    MeDCMotor motor_r(MOTOR_R);
-    MeRGBLed rgbled(LED);
-    MeBuzzer buzzer(BUZZER);
+MeDCMotor motor_l(MOTOR_L);
+MeDCMotor motor_r(MOTOR_R);
+MeRGBLed rgbled(LED);
+MeBuzzer buzzer(BUZZER);
 
 // motor functions
 void turn_left() {
@@ -95,13 +95,23 @@ int solve_challenge() {
 }
 
 void setup() {
+    Serial.begin(9600);
 }
 
 void loop() {
-    if (digitalRead(LINE) == HIGH) {
-        solve_challenge();
-    } else {
-        // read ir sensors and determine if correction necessary, else straight
-
-    }
+    rgbled.setColor(255, 255, 255);
+    delay(1000);
+    Serial.println(read_ldr_sensor());
+    rgbled.setColor(255, 0, 0);
+    delay(1000);
+    Serial.println(read_ldr_sensor());
+    rgbled.setColor(0, 255, 0);
+    delay(1000);
+    Serial.println(read_ldr_sensor());
+    rgbled.setColor(0, 0, 255);
+    delay(1000);
+    Serial.println(read_ldr_sensor());
+    rgbled.clear();
+    delay(1000);
+    Serial.println(read_ldr_sensor());
 }

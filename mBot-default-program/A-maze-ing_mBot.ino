@@ -29,10 +29,10 @@
 #define BUZZER 8       // buzzer
 
 // assign classes
-    MeDCMotor motor_l(MOTOR_L);
-    MeDCMotor motor_r(MOTOR_R);
-    MeRGBLed rgbled(LED);
-    MeBuzzer buzzer(BUZZER);
+MeDCMotor motor_l(MOTOR_L);
+MeDCMotor motor_r(MOTOR_R);
+MeRGBLed rgbled(LED);
+MeBuzzer buzzer(BUZZER);
 
 // motor functions
 void turn_left() {
@@ -68,16 +68,16 @@ void play_theme() {
  * @return  Time taken for the ultrasonic pulse to return in microseconds.
  */
 long read_ultrasonic_sensor() {
-    pinMode(ULTRASONIC, OUTPUT);
-    digitalWrite(ULTRASONIC, HIGH);
-    delayMicroseconds(2);
-    digitalWrite(ULTRASONIC, LOW);
-    pinMode(ULTRASONIC, INPUT);
-    return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
+  pinMode(ULTRASONIC, OUTPUT);
+  digitalWrite(ULTRASONIC, HIGH);
+  delayMicroseconds(2);
+  digitalWrite(ULTRASONIC, LOW);
+  pinMode(ULTRASONIC, INPUT);
+  return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
 long read_ldr_sensor() {
-    return analogRead(LIGHT);
+  return analogRead(LIGHT);
 }
 
 // challenge functions
@@ -95,14 +95,39 @@ int solve_challenge() {
 }
 
 void setup() {
-    
+  Serial.begin(9600);
+}
+
+long read_left_ir_sensor() {
+  // distance between walls 28cm
+  // length between the ir sensors 10.7cm to 11cm
+  Serial.print("left sensor: ");
+  Serial.println(analogRead(IR_L));
+}
+
+long read_right_ir_sensor() {
+  Serial.print("right sensor: ");
+  Serial.println(analogRead(IR_R));
+}
+
+void setup() {
+  Serial.begin(9600);
+  //int left_sensor = read_left_ir_sensor();
+  //int right_sensor = read_right_ir_sensor();
 }
 
 void loop() {
-    if (digitalRead(LINE) == HIGH) {
-        solve_challenge();
-    } else {
-        // read ir sensors and determine if correction necessary, else straight
-
-    }
+  delay(1000);
+  read_left_ir_sensor();
+  read_right_ir_sensor();
 }
+
+void loop() {
+  if (digitalRead(LINE) == HIGH) {
+    solve_challenge();
+  } else {
+    // read ir sensors and determine if correction necessary, else straight
+
+  }
+}
+

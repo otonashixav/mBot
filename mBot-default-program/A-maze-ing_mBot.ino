@@ -4,20 +4,22 @@
 
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000
-#define ULTRASONIC_THRESHOLD
-#define INFRARED_THRESHOLD
-#define MIC_THRESHOLD
-#define MAX_SPEED 255
-#define ADJUSTMENT_SPEED 200
-#define LED_DELAY 40
+#define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
+#define INFRARED_THRESHOLD        // "close enough to wall to adjust"
+#define MIC_THRESHOLD             // "loud enough to be considered not noise"
+#define MIC_LOUDER_THRESHOLD      // "loud enough to be considered louder than other"
+#define MAX_SPEED 255             // max speed of motors
+#define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
+#define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
+#define LED_DELAY 40              // response time of LDR
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
 // Port 2 contains 2 digital pins 9 and 10
 // Port 3 contains 2 analog pins A2 and A3
 // Port 4 contains 2 analog pins A0 and A1
-#define ULTRASONIC 12  // ultrasonic sensor
-#define LINE 9         // left line sensor
+#define ULTRASONIC 10  // ultrasonic sensor
+#define LINE 11        // left line sensor
 #define LIGHT A6       // light sensor
 #define LED 13         // top led
 #define IR_L A0        // left infrared sensor
@@ -51,6 +53,28 @@ void move_forward() {
 
 }
 
+void turn_left_forward_left() {
+
+}
+
+void turn_right_forward_right() {
+
+}
+
+void adjust_to_left() {
+  motor_l.run(ADJUSTMENT_SPEED);
+  delay(ADJUSTMENT_DELAY);
+  move_forward();
+  return;
+}
+
+void adjust_to_right() {
+  motor_r.run(ADJUSTMENT_SPEED);
+  delay(ADJUSTMENT_DELAY);
+  move_forward();
+  return;
+}
+
 // victory theme
 
 
@@ -64,6 +88,7 @@ void play_theme() {
  * Sends an ultrasonic pulse and waits for the echo. The timeout is defined
  * by ULTRASONIC_TIMEOUT. Returns the time in microseconds before the echo is
  * heard. Consider replacing with boolean function for "close enough to wall"
+ * to save time and space? 
  * 
  * @return  Time taken for the ultrasonic pulse to return in microseconds.
  */
@@ -76,38 +101,66 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-long read_ldr_sensor() {
-  return analogRead(LIGHT);
-}
-
-// challenge functions
-
-int solve_color() {
-
-}
-
-int solve_sound() {
-
-}
-
-int solve_challenge() {
-
-}
-
-void setup() {
-  Serial.begin(9600);
-}
-
-long read_left_ir_sensor() {
+int read_left_ir_sensor() {
   // distance between walls 28cm
   // length between the ir sensors 10.7cm to 11cm
   Serial.print("left sensor: ");
   Serial.println(analogRead(IR_L));
 }
 
-long read_right_ir_sensor() {
+int read_right_ir_sensor() {
   Serial.print("right sensor: ");
   Serial.println(analogRead(IR_R));
+}
+
+// challenge functions
+
+/**
+ * Attempts to solve the color challenge, then calls the appropriate function
+ * to move the mBot accordingly. Returns true if a challenge was found and
+ * solved, and false otherwise.
+ * 
+ * @return  True if color was detected and the appropriate action taken, and
+ *          false otherwise.
+ */
+bool solve_color() {
+  // find intensity of reflected red, green and blue light
+  rgbled.setColor(255, 0, 0);
+  delay(LED_DELAY);
+  int red = analogRead(LIGHT);
+  rgbled.setColor(0, 255, 0);
+  delay(LED_DELAY);
+  int green = analogRead(LIGHT);
+  rgbled.setColor(0, 0, 255);
+  delay(LED_DELAY);
+  int blue = analogRead(LIGHT);
+  rgbled.clear();
+
+  // solve accordingly; TODO
+  if () {
+    // perform action
+    return true;
+  } else if() {
+    // perform action
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool solve_sound() {
+
+}
+
+void solve_challenge() {
+  if (solve_sound()) {
+    return;
+  } else if (solve_color()) {
+    return;
+  } else {
+    play_theme();
+    // probably loop here until the button is pressed which should return
+  }
 }
 
 void setup() {
@@ -116,18 +169,24 @@ void setup() {
   //int right_sensor = read_right_ir_sensor();
 }
 
+/*
 void loop() {
   delay(1000);
   read_left_ir_sensor();
   read_right_ir_sensor();
 }
+*/
 
 void loop() {
-  if (digitalRead(LINE) == HIGH) {
+  if (digitalRead(LINE) == LOW) { // logically LOW means no reflection (check)
     solve_challenge();
   } else {
+    if (read_left_ir_sensor() < INFRARED_THRESHOLD) {
+      adjust_to_right();
+    } else if (read_right_ir_sensor() < INFRARED_THRESHOLD) {
+      adjust_to_left();
+    }
     // read ir sensors and determine if correction necessary, else straight
 
   }
 }
-

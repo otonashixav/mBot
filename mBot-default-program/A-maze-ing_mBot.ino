@@ -85,6 +85,21 @@ void play_theme() {
 // sensor functions
 
 /**
+ * Reads the analog output of a pin 5 times, and returns the average value
+ * rounded down to the nearest integer. 
+ * 
+ * @param[in] pin  The pin to read
+ * @return         The average value of 5 readings from the pin
+ */
+int analogAvgRead(int pin) {
+  int average = 0;
+  for (int i = 0; i < 5; i += 1) {
+    average += analogRead(pin);
+  }
+  return average / 5; // rounds down but negligible for our purposes
+}
+
+/**
  * Sends an ultrasonic pulse and waits for the echo. The timeout is defined
  * by ULTRASONIC_TIMEOUT. Returns the time in microseconds before the echo is
  * heard. Consider replacing with boolean function for "close enough to wall"

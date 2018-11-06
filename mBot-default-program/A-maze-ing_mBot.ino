@@ -75,8 +75,47 @@ void adjust_to_right() {
   return;
 }
 
-// victory theme
+#define INFRARED_NO_WALL
+#define IDEAL_DIVISOR 5
+#define SMOOTHING 5
+void forward_corrections() {
+  int left_ir = read_left_ir_sensor();
+  int right_ir = read_right_ir_sensor();
+  // Use the lowest reading
+  bool use_left = left_ir < right_ir;
+  int reading = use_left ? left_ir : right_ir;
+  if (reading < INFRARED_NO_WALL) {
+    // Update average readings if it senses a wall
+    average_reading += (reading - average_reading) / SMOOTHING;
+    average_gradient += (reading - prev_reading - average_gradient) / SMOOTHING;
+  }
+  if (average_reading < INFRARED_THRESHOLD) {
+    // Turn if below threshold
+    // Makes the gradient dependent on how close to the wall it is
+    int ideal_gradient = (INFRARED_THRESHOLD - average_reading) / IDEAL_DIVISOR;
 
+    int turn_sharpness = ideal_gradient - average_gradient * (1000 / INFRARED_PERIOD);
+    // Use constant sharpness?
+    //int turn_sharpness = ideal_gradient > average_gradient ? 55 : -55;
+
+    // +ve gradient/sharpness: away from wall
+    // Closer to left side: +ve gradient to right
+    // Closer to right side: +ve gradient to left
+    if (use_left) {
+      // Standardise +ve sharpness to left
+      turn_sharpness = -turn_sharpness;
+    }
+    if (turn_sharpness > 0) {
+      motor_l.run(MAX_SPEED - turn_sharpness);
+    } else {
+      motor_r.run(MAX_SPEED - turn_sharpness);
+    }
+  } else {
+    move_forward();
+  }
+}
+
+// victory theme
 
 void play_theme() {
 

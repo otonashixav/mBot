@@ -269,8 +269,15 @@ void solve_challenge() {
 
 void setup() {
   Serial.begin(9600);
-  //int left_sensor = read_left_ir_sensor();
-  //int right_sensor = read_right_ir_sensor();
+  pinMode(IR_L, INPUT);
+  pinMode(IR_R, INPUT);
+  pinMode(LINE, INPUT);
+  pinMode(LIGHT, INPUT);
+  pinMode(MIC_LOW, INPUT);
+  pinMode(MIC_HIGH, INPUT);
+  pinMode(MOTOR_L, OUTPUT);
+  pinMode(MOTOR_R, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
 }
 
 void loop() {

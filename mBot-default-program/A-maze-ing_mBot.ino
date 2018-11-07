@@ -1,6 +1,7 @@
 #include <Arduino.h>   // should be included automatically when compiled; includes stdbool
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
+#include <elapsedMillis.h> // for calculations involving time
 
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000
@@ -37,28 +38,53 @@ MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
 // motor functions
-void turn_left() {
 
+#define TURNING_SPEED 255
+#define TURN_DURATION 1000
+#define FORWARD_INTERVAL 1000
+
+void turn_left() {
+  elapsedMillis timeElapsed;
+  while (timeElapsed < TURN_DURATION) {
+    motor.r.run(TURNING_SPEED);
+    motor.l.run(-TURNING_SPEED);
+  }
 }
 
 void turn_right() {
-
+  elapsedMillis timeElapsed;
+  while (timeElapsed < TURN_DURATION) {
+    motor.r.run(-TURNING_SPEED);
+    motor.l.run(TURNING_SPEED);
+  }
 }
 
 void turn_180() {
-
+  turn_left();
+  turn_left();
 }
 
 void move_forward() {
-
+  motor.r.run(MAX_SPEED);
+  motor.l.run(MAX_SPEED);
 }
 
 void turn_left_forward_left() {
-
+  elapsedMillis timeElapsed;
+  turn_left();
+  while (timeElapsed < FORWARD_INTERVAL) {
+    move_forward();
+  }
+  turn_left();
 }
 
 void turn_right_forward_right() {
-
+  elapsedMillis timeElapsed;
+  turn_right();
+  while (timeElapsed < FORWARD_INTERVAL) {
+    move_forward();
+  }
+  turn_right();
 }
 
 void adjust_to_left() {

@@ -1,19 +1,26 @@
 #include <Arduino.h>   // should be included automatically when compiled; includes stdbool
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
-#include <elapsedMillis.h> // for calculations involving time
 
 // constant definitions
-#define ULTRASONIC_TIMEOUT 30000
+#define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
-#define INFRARED_THRESHOLD        // "close enough to wall to adjust"
+#define INFRARED_THRESHOLD_L 600  // "close enough to wall to adjust to left"
+#define INFRARED_THRESHOLD_R 400  // "close enough to wall to adjust to right"
 #define MIC_THRESHOLD             // "loud enough to be considered not noise"
 #define MIC_LOUDER_THRESHOLD      // "loud enough to be considered louder than other"
 #define MAX_SPEED 255             // max speed of motors
 #define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
 #define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
 #define LED_DELAY 40              // response time of LDR
+#define INFRARED_NO_WALL          // further than which consider the bot not close to a wall
+#define IDEAL_DIVISOR 5           // 
+#define SMOOTHING 5               // 
+#define TURNING_SPEED 255         //
+#define TURN_DURATION 1000        //
+#define FORWARD_INTERVAL 1000     //
 #define MIC_DECIDE                //threshold value to decide
+
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
 // Port 2 contains 2 digital pins 9 and 10
@@ -38,75 +45,63 @@ MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
 // motor functions
-
-#define TURNING_SPEED 255
-#define TURN_DURATION 1000
-#define FORWARD_INTERVAL 1000
-
 void turn_left() {
-  elapsedMillis timeElapsed;
-  while (timeElapsed < TURN_DURATION) {
-    motor.r.run(TURNING_SPEED);
-    motor.l.run(-TURNING_SPEED);
-  }
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(-TURNING_SPEED);
+  delay(TURN_DURATION);
+  return;
 }
 
 void turn_right() {
-  elapsedMillis timeElapsed;
-  while (timeElapsed < TURN_DURATION) {
-    motor.r.run(-TURNING_SPEED);
-    motor.l.run(TURNING_SPEED);
-  }
+  motor_r.run(-TURNING_SPEED);
+  motor_l.run(TURNING_SPEED);
+  delay(TURN_DURATION);
+  return;
 }
 
 void turn_180() {
   turn_left();
   turn_left();
+  return;
 }
 
 void move_forward() {
-  motor.r.run(MAX_SPEED);
-  motor.l.run(MAX_SPEED);
+  motor_r.run(MAX_SPEED);
+  motor_l.run(MAX_SPEED);
+  return;
 }
 
 void turn_left_forward_left() {
-  elapsedMillis timeElapsed;
   turn_left();
-  while (timeElapsed < FORWARD_INTERVAL) {
-    move_forward();
-  }
+  // while ultrasonic larger than value, do nothing
   turn_left();
+  return;
 }
 
 void turn_right_forward_right() {
-  elapsedMillis timeElapsed;
   turn_right();
-  while (timeElapsed < FORWARD_INTERVAL) {
-    move_forward();
-  }
+  // while ultrasonic larger than value, do nothing
   turn_right();
+  return;
 }
 
 void adjust_to_left() {
   motor_l.run(ADJUSTMENT_SPEED);
   delay(ADJUSTMENT_DELAY);
-  move_forward();
   return;
 }
 
 void adjust_to_right() {
   motor_r.run(ADJUSTMENT_SPEED);
   delay(ADJUSTMENT_DELAY);
-  move_forward();
   return;
 }
 
-#define INFRARED_NO_WALL
-#define IDEAL_DIVISOR 5
-#define SMOOTHING 5
 void forward_corrections() {
   int left_ir = read_left_ir_sensor();
   int right_ir = read_right_ir_sensor();
+  static int average_reading = INFRARED_THRESHOLD;
+  static int average_gradient = 0;
   // Use the lowest reading
   bool use_left = left_ir < right_ir;
   int reading = use_left ? left_ir : right_ir;
@@ -180,6 +175,8 @@ long read_ultrasonic_sensor() {
   pinMode(ULTRASONIC, INPUT);
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
+
+struct rgb 
 
 int read_left_ir_sensor() {
   // distance between walls 28cm
@@ -285,8 +282,8 @@ void loop() {
       adjust_to_right();
     } else if (read_right_ir_sensor() < INFRARED_THRESHOLD) {
       adjust_to_left();
+    } else {
+      move_forward();
     }
-    // read ir sensors and determine if correction necessary, else straight
-
   }
 }

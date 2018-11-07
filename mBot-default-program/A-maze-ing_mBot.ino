@@ -2,13 +2,19 @@
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
+struct color {
+    int r;
+    int g;
+    int b;
+};
+
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
 #define INFRARED_THRESHOLD_L 600  // "close enough to wall to adjust to left"
 #define INFRARED_THRESHOLD_R 400  // "close enough to wall to adjust to right"
-#define MIC_THRESHOLD             // "loud enough to be considered not noise"
-#define MIC_LOUDER_THRESHOLD      // "loud enough to be considered louder than other"
+#define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
+#define MIC_DECIDE 200            // threshold value to decide mic loudness
 #define MAX_SPEED 255             // max speed of motors
 #define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
 #define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
@@ -19,7 +25,6 @@
 #define TURNING_SPEED 255         //
 #define TURN_DURATION 1000        //
 #define FORWARD_INTERVAL 1000     //
-#define MIC_DECIDE                //threshold value to decide
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -46,14 +51,14 @@ MeBuzzer buzzer(BUZZER);
 
 // motor functions
 void turn_left() {
-  motor_r.run(TURNING_SPEED);
+  motor_r.run(-TURNING_SPEED);
   motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION);
   return;
 }
 
 void turn_right() {
-  motor_r.run(-TURNING_SPEED);
+  motor_r.run(TURNING_SPEED);
   motor_l.run(TURNING_SPEED);
   delay(TURN_DURATION);
   return;
@@ -67,7 +72,7 @@ void turn_180() {
 
 void move_forward() {
   motor_r.run(MAX_SPEED);
-  motor_l.run(MAX_SPEED);
+  motor_l.run(-MAX_SPEED);
   return;
 }
 
@@ -86,20 +91,21 @@ void turn_right_forward_right() {
 }
 
 void adjust_to_left() {
-  motor_l.run(ADJUSTMENT_SPEED);
-  delay(ADJUSTMENT_DELAY);
+  motor_r.run(MAX_SPEED);
+  motor_l.run(-ADJUSTMENT_SPEED);
   return;
 }
 
 void adjust_to_right() {
   motor_r.run(ADJUSTMENT_SPEED);
-  delay(ADJUSTMENT_DELAY);
+  motor_l.run(-MAX_SPEED);
   return;
 }
 
+/*
 void forward_corrections() {
-  int left_ir = read_left_ir_sensor();
-  int right_ir = read_right_ir_sensor();
+  int left_ir = analogAvgRead(IR_L);
+  int right_ir = analogAvgRead(IR_R);
   static int average_reading = INFRARED_THRESHOLD;
   static int average_gradient = 0;
   // Use the lowest reading
@@ -135,7 +141,7 @@ void forward_corrections() {
     move_forward();
   }
 }
-
+*/
 // victory theme
 
 void play_theme() {
@@ -176,22 +182,22 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-struct rgb 
-
-int read_left_ir_sensor() {
-  // distance between walls 28cm
-  // length between the ir sensors 10.7cm to 11cm
-  Serial.print("left sensor: ");
-  Serial.println(analogRead(IR_L));
-}
-
-int read_right_ir_sensor() {
-  Serial.print("right sensor: ");
-  Serial.println(analogRead(IR_R));
+struct color read_ldr_sensor() {
+  struct color result;
+  rgbled.setColor(255, 0, 0);
+  delay(LED_DELAY);
+  result.r = analogRead(LIGHT);
+  rgbled.setColor(0, 255, 0);
+  delay(LED_DELAY);
+  result.g = analogRead(LIGHT);
+  rgbled.setColor(0, 0, 255);
+  delay(LED_DELAY);
+  result.b = analogRead(LIGHT);
+  rgbled.clear();
+  return result;
 }
 
 // challenge functions
-
 /**
  * Attempts to solve the color challenge, then calls the appropriate function
  * to move the mBot accordingly. Returns true if a challenge was found and
@@ -201,46 +207,52 @@ int read_right_ir_sensor() {
  *          false otherwise.
  */
 bool solve_color() {
-  // find intensity of reflected red, green and blue light
-  rgbled.setColor(255, 0, 0);
-  delay(LED_DELAY);
-  int red = analogRead(LIGHT);
-  rgbled.setColor(0, 255, 0);
-  delay(LED_DELAY);
-  int green = analogRead(LIGHT);
-  rgbled.setColor(0, 0, 255);
-  delay(LED_DELAY);
-  int blue = analogRead(LIGHT);
-  rgbled.clear();
-
+    struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
-  if () {
-    // perform action
+  if (paper.r > 800 && paper.g > 800 && paper.b > 800) {
+    // white
+    turn_180();
     return true;
-  } else if() {
-    // perform action
+  } else if (paper.r > 800 && paper.g > 800) {
+    // orange
+    turn_left_forward_left();
+    return true;
+  } else if (paper.r > 800) {
+    // red
+    turn_left();
+    return true;
+  } else if (paper.g > 800) {
+    // green
+    turn_right();
+    return true;
+  } else if (paper.b > 800) {
+    // blue
+    turn_right_forward_right();
     return true;
   } else {
+    // black
     return false;
   }
 }
 
 bool solve_sound() {
-
-}
-void sound_challenge(){
-  int mic_low = analogRead(MIC_LOW);//getAvgReading(5)
-  int mic_high = analogRead(MIC_HIGH);//getAvgReading(5)
-  if(mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
-      if(mic_low > mic_high + MIC_DECIDE){
-        turn_left();
-      } else if(mic_high > mic_low + MIC_DECIDE){
-        turn_right();
-      } else {
-        //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
-        //have the same amplitude.
-        turn_180; 
-      }
+  int mic_low = analogAvgRead(MIC_LOW);
+  int mic_high = analogAvgRead(MIC_HIGH);
+  if (mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
+    if (mic_low > mic_high + MIC_DECIDE) {
+      turn_left();
+      return true;
+    } else if (mic_high > mic_low + MIC_DECIDE) {
+      turn_right();
+      return true;
+    } else {
+      //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
+      //have the same amplitude.
+      turn_180();
+      return true;
+    }
+  } else {
+    return false;
   }
 }
 
@@ -261,24 +273,16 @@ void setup() {
   //int right_sensor = read_right_ir_sensor();
 }
 
-/*
 void loop() {
-  delay(1000);
-  read_left_ir_sensor();
-  read_right_ir_sensor();
-}
-*/
-
-void loop() {
-  if (digitalRead(LINE) == LOW) { // logically LOW means no reflection (check)
+  if (digitalRead(LINE) == LOW) {
     solve_challenge();
   } else {
-    if (read_left_ir_sensor() < INFRARED_THRESHOLD) {
+    while (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
       adjust_to_right();
-    } else if (read_right_ir_sensor() < INFRARED_THRESHOLD) {
-      adjust_to_left();
-    } else {
-      move_forward();
     }
+    while (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+      adjust_to_left();
+    }
+    move_forward();
   }
 }

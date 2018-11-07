@@ -2,12 +2,6 @@
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
-struct color {
-    int r;
-    int g;
-    int b;
-};
-
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
@@ -19,7 +13,7 @@ struct color {
 #define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
 #define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
 #define LED_DELAY 40              // response time of LDR
-#define INFRARED_NO_WALL          // further than which consider the bot not close to a wall
+#define INFRARED_NO_WALL 700      // no wall in range if analogread returns larger than this
 #define IDEAL_DIVISOR 5           // 
 #define SMOOTHING 5               // 
 #define TURNING_SPEED 255         //
@@ -44,8 +38,8 @@ struct color {
 #define BUZZER 8       // buzzer
 
 // assign classes
-MeDCMotor motor_l(MOTOR_L);
-MeDCMotor motor_r(MOTOR_R);
+MeDCMotor motor_l(6, 7);
+MeDCMotor motor_r(5, 4);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
@@ -182,8 +176,8 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-struct color read_ldr_sensor() {
-  struct color result;
+struct cRGB read_ldr_sensor() {
+  struct cRGB result;
   rgbled.setColor(255, 0, 0);
   delay(LED_DELAY);
   result.r = analogRead(LIGHT);
@@ -207,7 +201,7 @@ struct color read_ldr_sensor() {
  *          false otherwise.
  */
 bool solve_color() {
-    struct color paper = read_ldr_sensor();
+    struct cRGB paper = read_ldr_sensor();
   // solve accordingly; TODO
   if (paper.r > 800 && paper.g > 800 && paper.b > 800) {
     // white
@@ -241,16 +235,14 @@ bool solve_sound() {
   if (mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
-      return true;
     } else if (mic_high > mic_low + MIC_DECIDE) {
       turn_right();
-      return true;
     } else {
       //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
       //have the same amplitude.
       turn_180();
-      return true;
     }
+    return true;
   } else {
     return false;
   }
@@ -275,8 +267,10 @@ void setup() {
   pinMode(LIGHT, INPUT);
   pinMode(MIC_LOW, INPUT);
   pinMode(MIC_HIGH, INPUT);
-  pinMode(MOTOR_L, OUTPUT);
-  pinMode(MOTOR_R, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
   pinMode(BUZZER, OUTPUT);
 }
 

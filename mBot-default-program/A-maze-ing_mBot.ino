@@ -10,8 +10,8 @@ struct color {
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
-#define INFRARED_THRESHOLD_L 600  // "close enough to wall to adjust to left"
-#define INFRARED_THRESHOLD_R 400  // "close enough to wall to adjust to right"
+#define INFRARED_THRESHOLD_L 550  // "close enough to wall to adjust to left"
+#define INFRARED_THRESHOLD_R 550  // "close enough to wall to adjust to right"
 #define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
 #define MIC_DECIDE 200            // threshold value to decide mic loudness
 #define MAX_SPEED 255             // max speed of motors
@@ -22,7 +22,7 @@ struct color {
 #define IDEAL_DIVISOR 5           // 
 #define SMOOTHING 5               // 
 #define TURNING_SPEED 255         //
-#define TURN_DURATION 1000        //
+#define TURN_DURATION 290         //
 #define FORWARD_INTERVAL 1000     //
 
 // pin definitions
@@ -119,11 +119,9 @@ void forward_corrections() {
     // Turn if below threshold
     // Makes the gradient dependent on how close to the wall it is
     int ideal_gradient = (INFRARED_THRESHOLD - average_reading) / IDEAL_DIVISOR;
-
     int turn_sharpness = ideal_gradient - average_gradient * (1000 / INFRARED_PERIOD);
     // Use constant sharpness?
     //int turn_sharpness = ideal_gradient > average_gradient ? 55 : -55;
-
     // +ve gradient/sharpness: away from wall
     // Closer to left side: +ve gradient to right
     // Closer to right side: +ve gradient to left
@@ -208,25 +206,25 @@ struct color read_ldr_sensor() {
 bool solve_color() {
     struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
-  if (paper.r > 800 && paper.g > 800 && paper.b > 800) {
+  if (paper.r > 600 && paper.g > 600 && paper.b > 600) {
     // white
     turn_180();
     return true;
-  } else if (paper.r > 800 && paper.g > 800) {
+  } else if (paper.r > 700) {
     // orange
     turn_left_forward_left();
     return true;
-  } else if (paper.r > 800) {
+  } else if (paper.r > 600) {
     // red
     turn_left();
     return true;
-  } else if (paper.g > 800) {
+  } else if (paper.b > 400) {
     // green
-    turn_right();
-    return true;
-  } else if (paper.b > 800) {
-    // blue
     turn_right_forward_right();
+    return true;
+  } else if (paper.g > 350) {
+    // blue
+    turn_right();
     return true;
   } else {
     // black
@@ -256,6 +254,8 @@ bool solve_sound() {
 }
 
 void solve_challenge() {
+  motor_l.stop();
+  motor_r.stop();
   // if (solve_sound()) {
   //   return;
   // } else 
@@ -282,7 +282,12 @@ void setup() {
 
 void loop() {
   if (digitalRead(LINE) == LOW) {
-    //solve_challenge();
+    solve_challenge();
+    motor_l.stop();
+    motor_r.stop();
+    for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
+      delay(10);
+    }
   } else {
     if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
       adjust_to_right();
@@ -291,7 +296,7 @@ void loop() {
     } else {
       move_forward();
     }
-  }
+  }/*
   
   /* DEBUG: Color Test
   struct color test = read_ldr_sensor();

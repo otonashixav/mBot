@@ -19,6 +19,7 @@
 #define TURNING_SPEED 255         //
 #define TURN_DURATION 1000        //
 #define FORWARD_INTERVAL 1000     //
+#define MIC_DECIDE                //threshold value to decide
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -226,6 +227,21 @@ bool solve_color() {
 
 bool solve_sound() {
 
+}
+void sound_challenge(){
+  int mic_low = analogRead(MIC_LOW);//getAvgReading(5)
+  int mic_high = analogRead(MIC_HIGH);//getAvgReading(5)
+  if(mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
+      if(mic_low > mic_high + MIC_DECIDE){
+        turn_left();
+      } else if(mic_high > mic_low + MIC_DECIDE){
+        turn_right();
+      } else {
+        //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
+        //have the same amplitude.
+        turn_180; 
+      }
+  }
 }
 
 void solve_challenge() {

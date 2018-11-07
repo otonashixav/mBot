@@ -6,7 +6,7 @@
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
 #define INFRARED_THRESHOLD_L 600  // "close enough to wall to adjust to left"
-#define INFRARED_THRESHOLD_R 300  // "close enough to wall to adjust to right"
+#define INFRARED_THRESHOLD_R 400  // "close enough to wall to adjust to right"
 #define MIC_THRESHOLD             // "loud enough to be considered not noise"
 #define MIC_LOUDER_THRESHOLD      // "loud enough to be considered louder than other"
 #define MAX_SPEED 255             // max speed of motors

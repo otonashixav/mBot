@@ -22,9 +22,9 @@
 #define LINE 11        // left line sensor
 #define LIGHT A6       // light sensor
 #define LED 13         // top led
-#define IR_L A0        // left infrared sensor
+#define IR_L A1        // left infrared sensor
 #define IR_R A2        // right infrared sensor
-#define MIC_LOW A1     // low pass mic output
+#define MIC_LOW A0     // low pass mic output
 #define MIC_HIGH A3    // high pass mic output
 #define MOTOR_L M1     // left motor
 #define MOTOR_R M2     // right motor

@@ -1,6 +1,11 @@
-#include <Arduino.h>   // should be included automatically when compiled; includes stdbool
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
+
+struct color {
+    int r;
+    int g;
+    int b;
+};
 
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
@@ -12,8 +17,8 @@
 #define MAX_SPEED 255             // max speed of motors
 #define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
 #define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
-#define LED_DELAY 40              // response time of LDR
-#define INFRARED_NO_WALL 700      // no wall in range if analogread returns larger than this
+#define LED_DELAY 30              // response time of LDR
+#define INFRARED_NO_WALL          // further than which consider the bot not close to a wall
 #define IDEAL_DIVISOR 5           // 
 #define SMOOTHING 5               // 
 #define TURNING_SPEED 255         //
@@ -33,27 +38,27 @@
 #define IR_R A2        // right infrared sensor
 #define MIC_LOW A0     // low pass mic output
 #define MIC_HIGH A3    // high pass mic output
-#define MOTOR_L M1     // left motor
-#define MOTOR_R M2     // right motor
+#define MOTOR_L M2     // left motor
+#define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
 
 // assign classes
-MeDCMotor motor_l(6, 7);
-MeDCMotor motor_r(5, 4);
+MeDCMotor motor_l(MOTOR_L);
+MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
 // motor functions
 void turn_left() {
-  motor_r.run(-TURNING_SPEED);
-  motor_l.run(-TURNING_SPEED);
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(TURNING_SPEED);
   delay(TURN_DURATION);
   return;
 }
 
 void turn_right() {
-  motor_r.run(TURNING_SPEED);
-  motor_l.run(TURNING_SPEED);
+  motor_r.run(-TURNING_SPEED);
+  motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION);
   return;
 }
@@ -176,8 +181,8 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-struct cRGB read_ldr_sensor() {
-  struct cRGB result;
+struct color read_ldr_sensor() {
+  struct color result;
   rgbled.setColor(255, 0, 0);
   delay(LED_DELAY);
   result.r = analogRead(LIGHT);
@@ -201,7 +206,7 @@ struct cRGB read_ldr_sensor() {
  *          false otherwise.
  */
 bool solve_color() {
-    struct cRGB paper = read_ldr_sensor();
+    struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
   if (paper.r > 800 && paper.g > 800 && paper.b > 800) {
     // white
@@ -235,23 +240,26 @@ bool solve_sound() {
   if (mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
+      return true;
     } else if (mic_high > mic_low + MIC_DECIDE) {
       turn_right();
+      return true;
     } else {
       //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
       //have the same amplitude.
       turn_180();
+      return true;
     }
-    return true;
   } else {
     return false;
   }
 }
 
 void solve_challenge() {
-  if (solve_sound()) {
-    return;
-  } else if (solve_color()) {
+  // if (solve_sound()) {
+  //   return;
+  // } else 
+  if (solve_color()) {
     return;
   } else {
     play_theme();
@@ -267,23 +275,32 @@ void setup() {
   pinMode(LIGHT, INPUT);
   pinMode(MIC_LOW, INPUT);
   pinMode(MIC_HIGH, INPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
+  pinMode(MOTOR_L, OUTPUT);
+  pinMode(MOTOR_R, OUTPUT);
   pinMode(BUZZER, OUTPUT);
 }
 
 void loop() {
   if (digitalRead(LINE) == LOW) {
-    solve_challenge();
+    //solve_challenge();
   } else {
-    while (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+    if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
       adjust_to_right();
-    }
-    while (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+    } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
       adjust_to_left();
+    } else {
+      move_forward();
     }
-    move_forward();
   }
+  
+  /* DEBUG: Color Test
+  struct color test = read_ldr_sensor();
+  Serial.print("R");
+  Serial.print(test.r);
+  Serial.print(" G");
+  Serial.print(test.g);
+  Serial.print(" B");
+  Serial.print(test.b);
+  Serial.println("");
+  delay(1000);*/
 }

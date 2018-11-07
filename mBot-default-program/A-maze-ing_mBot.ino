@@ -184,13 +184,18 @@ long read_ultrasonic_sensor() {
 int read_left_ir_sensor() {
   // distance between walls 28cm
   // length between the ir sensors 10.7cm to 11cm
+  // length between the wheels 12.5cm
+  int value = analogAvgRead(IR_L);
   Serial.print("left sensor: ");
-  Serial.println(analogRead(IR_L));
+  Serial.println(value);
+  return value;
 }
 
 int read_right_ir_sensor() {
-  Serial.print("right sensor: ");
-  Serial.println(analogRead(IR_R));
+  int value = analogAvgRead(IR_R);
+  Serial.print("left sensor: ");
+  Serial.println(value);
+  return value;
 }
 
 // challenge functions
@@ -242,7 +247,7 @@ void sound_challenge(){
       } else {
         //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
         //have the same amplitude.
-        turn_180; 
+        turn_180(); 
       }
   }
 }

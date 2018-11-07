@@ -176,7 +176,7 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
-struct rgb 
+//struct rgb TODO
 
 int read_left_ir_sensor() {
   // distance between walls 28cm
@@ -262,6 +262,8 @@ void solve_challenge() {
 
 void setup() {
   Serial.begin(9600);
+  pinMode(IR_L, INPUT);
+  pinMode(IR_R, INPUT);
   //int left_sensor = read_left_ir_sensor();
   //int right_sensor = read_right_ir_sensor();
 }
@@ -278,9 +280,9 @@ void loop() {
   if (digitalRead(LINE) == LOW) { // logically LOW means no reflection (check)
     solve_challenge();
   } else {
-    if (read_left_ir_sensor() < INFRARED_THRESHOLD) {
+    if (read_left_ir_sensor() < INFRARED_THRESHOLD_L) {
       adjust_to_right();
-    } else if (read_right_ir_sensor() < INFRARED_THRESHOLD) {
+    } else if (read_right_ir_sensor() < INFRARED_THRESHOLD_R) {
       adjust_to_left();
     } else {
       move_forward();

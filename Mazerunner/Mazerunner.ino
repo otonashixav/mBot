@@ -8,22 +8,31 @@ struct color {
 };
 
 // constant definitions
-#define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
-#define ULTRASONIC_THRESHOLD 600  // "close enough to wall to turn"
-#define INFRARED_THRESHOLD_L 550  // "close enough to wall to adjust to left"
-#define INFRARED_THRESHOLD_R 550  // "close enough to wall to adjust to right"
-#define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
-#define MIC_DECIDE 200            // threshold value to decide mic loudness
-#define MAX_SPEED 255             // max speed of motors
-#define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
-#define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
-#define LED_DELAY 30              // response time of LDR
-#define INFRARED_NO_WALL          // further than which consider the bot not close to a wall
-#define IDEAL_DIVISOR 5           // 
-#define SMOOTHING 5               // 
-#define TURNING_SPEED 255         //
-#define TURN_DURATION 270         //
-#define FORWARD_INTERVAL 1000     //
+#define ULTRASONIC_TIMEOUT 30000         // timeout for pulseIn
+#define ULTRASONIC_THRESHOLD 600         // "close enough to wall to turn"
+
+#define INFRARED_THRESHOLD_L 650         // "close enough to wall to adjust to left" PREV: 550
+#define INFRARED_THRESHOLD_R 650         // "close enough to wall to adjust to right" PREV: 550
+#define SHARP_INFRARED_THRESHOLD_L 400   // "too close to wall to adjust to left"
+#define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
+
+#define MIC_THRESHOLD 200                // "loud enough to be considered not noise"
+#define MIC_DECIDE 200                   // threshold value to decide mic loudness
+
+#define MAX_SPEED 255                    // max speed of motors
+#define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
+#define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
+#define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
+#define TURNING_SPEED 255                //
+#define TURN_DURATION 255                //
+
+#define LED_DELAY 30                     // response time of LDR
+#define INFRARED_NO_WALL                 // further than which consider the bot not close to a wall
+#define IDEAL_DIVISOR 5                  // 
+#define SMOOTHING 5                      // 
+
+
+#define FORWARD_INTERVAL 1000            //
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -112,6 +121,19 @@ void adjust_to_right() {
   return;
 }
 
+
+void adjust_to_sharp_left() {
+  motor_r.run(MAX_SPEED);
+  motor_l.run(-SHARP_ADJUSTMENT_SPEED);
+  return;
+}
+
+void adjust_to_sharp_right() {
+  motor_r.run(SHARP_ADJUSTMENT_SPEED);
+  motor_l.run(-MAX_SPEED);
+  return;
+}
+
 void turn_left() {
   motor_r.run(TURNING_SPEED);
   motor_l.run(TURNING_SPEED);
@@ -137,8 +159,12 @@ void turn_180() {
 }
 
 void move_forward() {    
-  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+  if (analogAvgRead(IR_L) < SHARP_INFRARED_THRESHOLD_L) {
+    adjust_to_sharp_right();
+  } else if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
     adjust_to_right();
+  } else if (analogAvgRead(IR_R) < SHARP_INFRARED_THRESHOLD_R) {
+    adjust_to_sharp_left();
   } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
     adjust_to_left();
   } else {
@@ -307,6 +333,10 @@ void setup() {
   pinMode(MOTOR_L, OUTPUT);
   pinMode(MOTOR_R, OUTPUT);
   pinMode(BUZZER, OUTPUT);
+
+  while (analogRead(BUTTON) > 10) {
+    delay(200);
+  }
 }
 
 void loop() {

@@ -9,7 +9,7 @@ struct color {
 
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
-#define ULTRASONIC_THRESHOLD      // "close enough to wall to turn"
+#define ULTRASONIC_THRESHOLD 300  // "close enough to wall to turn"
 #define INFRARED_THRESHOLD_L 550  // "close enough to wall to adjust to left"
 #define INFRARED_THRESHOLD_R 550  // "close enough to wall to adjust to right"
 #define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
@@ -41,6 +41,7 @@ struct color {
 #define MOTOR_L M2     // left motor
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
+#define BUTON A7       // button
 
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
@@ -53,6 +54,8 @@ void turn_left() {
   motor_r.run(TURNING_SPEED);
   motor_l.run(TURNING_SPEED);
   delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -60,6 +63,8 @@ void turn_right() {
   motor_r.run(-TURNING_SPEED);
   motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -69,9 +74,15 @@ void turn_180() {
   return;
 }
 
-void move_forward() {
-  motor_r.run(MAX_SPEED);
-  motor_l.run(-MAX_SPEED);
+void move_forward() {    
+  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+    adjust_to_right();
+  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+    adjust_to_left();
+  } else {
+    motor_r.run(MAX_SPEED);
+    motor_l.run(-MAX_SPEED);
+  }
   return;
 }
 
@@ -79,8 +90,8 @@ void move_forward() {
 void turn_left_forward_left() {
   turn_left();
   // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_TURN_VALUE) {
-    move_forward;
+  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
+    move_forward();
   }
   turn_left();
   }
@@ -90,8 +101,8 @@ void turn_left_forward_left() {
 void turn_right_forward_right() {
   turn_right();
   // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_TURN_VALUE) {
-    move_forward;
+  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
+    move_forward();
   }
   turn_right();
   }
@@ -218,27 +229,23 @@ bool solve_color() {
   if (paper.r > 600 && paper.g > 600 && paper.b > 600) {
     // white
     turn_180();
-    return true;
   } else if (paper.r > 700) {
     // orange
     turn_left_forward_left();
-    return true;
   } else if (paper.r > 600) {
     // red
     turn_left();
-    return true;
   } else if (paper.b > 400) {
     // green
     turn_right_forward_right();
-    return true;
   } else if (paper.g > 350) {
     // blue
     turn_right();
-    return true;
   } else {
     // black
     return false;
   }
+  return true;
 }
 
 bool solve_sound() {
@@ -247,16 +254,14 @@ bool solve_sound() {
   if (mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
-      return true;
     } else if (mic_high > mic_low + MIC_DECIDE) {
-      turn_right();
-      return true;
+      turn_right()
     } else {
-      //both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
-      //have the same amplitude.
+      // both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
+      // have the same amplitude.
       turn_180();
-      return true;
     }
+    return true;
   } else {
     return false;
   }
@@ -271,8 +276,13 @@ void solve_challenge() {
   if (solve_color()) {
     return;
   } else {
+    rgbled.setColor(50, 50, 50);
     play_theme();
-    // probably loop here until the button is pressed which should return
+    while (analogRead(BUTTON) > 10) {
+      // do nothing? replay victory theme? 
+    }
+    rgbled.clear();
+    return;
   }
 }
 
@@ -290,26 +300,16 @@ void setup() {
 }
 
 void loop() {
-
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     solve_challenge();
-    motor_l.stop();
-    motor_r.stop();
     for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
       delay(10);
     }
-
   // Otherwise, keep moving forward while keeping yourself in the centre using
   // the IR sensors.
   } else {
-    if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
-      adjust_to_right();
-    } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
-      adjust_to_left();
-    } else {
-      move_forward();
-    }
+    move_forward();
   }
   
   /* DEBUG: Color Test

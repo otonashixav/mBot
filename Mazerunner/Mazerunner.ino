@@ -1,15 +1,15 @@
-#include "pitches.h"   // note definitions for playing MUSIC
+nclude "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
 struct color {
-    int r;
-    int g;
-    int b;
+  int r;
+  int g;
+  int b;
 };
 
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
-#define ULTRASONIC_THRESHOLD 300  // "close enough to wall to turn"
+#define ULTRASONIC_THRESHOLD 600  // "close enough to wall to turn"
 #define INFRARED_THRESHOLD_L 550  // "close enough to wall to adjust to left"
 #define INFRARED_THRESHOLD_R 550  // "close enough to wall to adjust to right"
 #define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
@@ -22,7 +22,7 @@ struct color {
 #define IDEAL_DIVISOR 5           // 
 #define SMOOTHING 5               // 
 #define TURNING_SPEED 255         //
-#define TURN_DURATION 290         //
+#define TURN_DURATION 270         //
 #define FORWARD_INTERVAL 1000     //
 
 // pin definitions
@@ -41,129 +41,13 @@ struct color {
 #define MOTOR_L M2     // left motor
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
-#define BUTON A7       // button
+#define BUTTON A7       // button
 
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
-
-// motor functions
-void turn_left() {
-  motor_r.run(TURNING_SPEED);
-  motor_l.run(TURNING_SPEED);
-  delay(TURN_DURATION);
-  motor_r.stop();
-  motor_l.stop();
-  return;
-}
-
-void turn_right() {
-  motor_r.run(-TURNING_SPEED);
-  motor_l.run(-TURNING_SPEED);
-  delay(TURN_DURATION);
-  motor_r.stop();
-  motor_l.stop();
-  return;
-}
-
-void turn_180() {
-  turn_right();
-  turn_right();
-  return;
-}
-
-void move_forward() {    
-  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
-    adjust_to_right();
-  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
-    adjust_to_left();
-  } else {
-    motor_r.run(MAX_SPEED);
-    motor_l.run(-MAX_SPEED);
-  }
-  return;
-}
-
-// TODO: Review below code
-void turn_left_forward_left() {
-  turn_left();
-  // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
-    move_forward();
-  }
-  turn_left();
-  }
-  return;
-}
-
-void turn_right_forward_right() {
-  turn_right();
-  // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
-    move_forward();
-  }
-  turn_right();
-  }
-  return;
-}
-
-void adjust_to_left() {
-  motor_r.run(MAX_SPEED);
-  motor_l.run(-ADJUSTMENT_SPEED);
-  return;
-}
-
-void adjust_to_right() {
-  motor_r.run(ADJUSTMENT_SPEED);
-  motor_l.run(-MAX_SPEED);
-  return;
-}
-
-/*
-void forward_corrections() {
-  int left_ir = analogAvgRead(IR_L);
-  int right_ir = analogAvgRead(IR_R);
-  static int average_reading = INFRARED_THRESHOLD;
-  static int average_gradient = 0;
-  // Use the lowest reading
-  bool use_left = left_ir < right_ir;
-  int reading = use_left ? left_ir : right_ir;
-  if (reading < INFRARED_NO_WALL) {
-    // Update average readings if it senses a wall
-    average_reading += (reading - average_reading) / SMOOTHING;
-    average_gradient += (reading - prev_reading - average_gradient) / SMOOTHING;
-  }
-  if (average_reading < INFRARED_THRESHOLD) {
-    // Turn if below threshold
-    // Makes the gradient dependent on how close to the wall it is
-    int ideal_gradient = (INFRARED_THRESHOLD - average_reading) / IDEAL_DIVISOR;
-    int turn_sharpness = ideal_gradient - average_gradient * (1000 / INFRARED_PERIOD);
-    // Use constant sharpness?
-    //int turn_sharpness = ideal_gradient > average_gradient ? 55 : -55;
-    // +ve gradient/sharpness: away from wall
-    // Closer to left side: +ve gradient to right
-    // Closer to right side: +ve gradient to left
-    if (use_left) {
-      // Standardise +ve sharpness to left
-      turn_sharpness = -turn_sharpness;
-    }
-    if (turn_sharpness > 0) {
-      motor_l.run(MAX_SPEED - turn_sharpness);
-    } else {
-      motor_r.run(MAX_SPEED - turn_sharpness);
-    }
-  } else {
-    move_forward();
-  }
-}
-*/
-// victory theme
-
-void play_theme() {
-
-}
 
 // sensor functions
 
@@ -214,6 +98,132 @@ struct color read_ldr_sensor() {
   return result;
 }
 
+// motor functions
+
+void adjust_to_left() {
+  motor_r.run(MAX_SPEED);
+  motor_l.run(-ADJUSTMENT_SPEED);
+  return;
+}
+
+void adjust_to_right() {
+  motor_r.run(ADJUSTMENT_SPEED);
+  motor_l.run(-MAX_SPEED);
+  return;
+}
+
+void turn_left() {
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(TURNING_SPEED);
+  delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
+  return;
+}
+
+void turn_right() {
+  motor_r.run(-TURNING_SPEED);
+  motor_l.run(-TURNING_SPEED);
+  delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
+  return;
+}
+
+void turn_180() {
+  turn_right();
+  turn_right();
+  return;
+}
+
+void move_forward() {    
+  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+    adjust_to_right();
+  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+    adjust_to_left();
+  } else {
+    motor_r.run(MAX_SPEED);
+    motor_l.run(-MAX_SPEED);
+  }
+  return;
+}
+
+// TODO: Review below code
+void turn_left_forward_left() {
+  turn_left();
+  move_forward();
+
+  // while ultrasonic larger than threshold, keep moving forward
+  while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
+    delay(10);
+  }
+
+  turn_left();
+  return;
+}
+
+
+void turn_right_forward_right() {
+  turn_right();
+  move_forward();
+
+  // while ultrasonic larger than threshold, keep moving forward
+  while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
+    delay(10);
+  }
+
+  turn_right();
+  return;
+}
+
+
+
+/*
+   void forward_corrections() {
+   int left_ir = analogAvgRead(IR_L);
+   int right_ir = analogAvgRead(IR_R);
+   static int average_reading = INFRARED_THRESHOLD;
+   static int average_gradient = 0;
+// Use the lowest reading
+bool use_left = left_ir < right_ir;
+int reading = use_left ? left_ir : right_ir;
+if (reading < INFRARED_NO_WALL) {
+// Update average readings if it senses a wall
+average_reading += (reading - average_reading) / SMOOTHING;
+average_gradient += (reading - prev_reading - average_gradient) / SMOOTHING;
+}
+if (average_reading < INFRARED_THRESHOLD) {
+// Turn if below threshold
+// Makes the gradient dependent on how close to the wall it is
+int ideal_gradient = (INFRARED_THRESHOLD - average_reading) / IDEAL_DIVISOR;
+int turn_sharpness = ideal_gradient - average_gradient * (1000 / INFRARED_PERIOD);
+// Use constant sharpness?
+//int turn_sharpness = ideal_gradient > average_gradient ? 55 : -55;
+// +ve gradient/sharpness: away from wall
+// Closer to left side: +ve gradient to right
+// Closer to right side: +ve gradient to left
+if (use_left) {
+// Standardise +ve sharpness to left
+turn_sharpness = -turn_sharpness;
+}
+if (turn_sharpness > 0) {
+motor_l.run(MAX_SPEED - turn_sharpness);
+} else {
+motor_r.run(MAX_SPEED - turn_sharpness);
+}
+} else {
+move_forward();
+}
+}
+ */
+// victory theme
+
+void play_theme() {
+
+}
+
+
+
 // challenge functions
 /**
  * Attempts to solve the color challenge, then calls the appropriate function
@@ -224,7 +234,7 @@ struct color read_ldr_sensor() {
  *          false otherwise.
  */
 bool solve_color() {
-    struct color paper = read_ldr_sensor();
+  struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
   if (paper.r > 600 && paper.g > 600 && paper.b > 600) {
     // white
@@ -255,7 +265,7 @@ bool solve_sound() {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
     } else if (mic_high > mic_low + MIC_DECIDE) {
-      turn_right()
+      turn_right();
     } else {
       // both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
       // have the same amplitude.
@@ -306,20 +316,25 @@ void loop() {
     for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
       delay(10);
     }
-  // Otherwise, keep moving forward while keeping yourself in the centre using
-  // the IR sensors.
+    // Otherwise, keep moving forward while keeping yourself in the centre using
+    // the IR sensors.
   } else {
     move_forward();
   }
-  
+
   /* DEBUG: Color Test
-  struct color test = read_ldr_sensor();
-  Serial.print("R");
-  Serial.print(test.r);
-  Serial.print(" G");
-  Serial.print(test.g);
-  Serial.print(" B");
-  Serial.print(test.b);
-  Serial.println("");
-  delay(1000);*/
+     struct color test = read_ldr_sensor();
+     Serial.print("R");
+     Serial.print(test.r);
+     Serial.print(" G");
+     Serial.print(test.g);
+     Serial.print(" B");
+     Serial.print(test.b);
+     Serial.println("");
+     delay(1000);*/
+
+  /* DEBUG: Ultrasonic Sensors
+     Serial.println(read_ultrasonic_sensor());
+     delay(1000);
+   */
 }

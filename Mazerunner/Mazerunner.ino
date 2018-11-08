@@ -64,8 +64,8 @@ void turn_right() {
 }
 
 void turn_180() {
-  turn_left();
-  turn_left();
+  turn_right();
+  turn_right();
   return;
 }
 
@@ -75,17 +75,26 @@ void move_forward() {
   return;
 }
 
+// TODO: Review below code
 void turn_left_forward_left() {
   turn_left();
-  // while ultrasonic larger than value, do nothing
+  // while ultrasonic larger than value, keep moving forward
+  while (read_ultrasonic_sensor() < ULTRASONIC_TURN_VALUE) {
+    move_forward;
+  }
   turn_left();
+  }
   return;
 }
 
 void turn_right_forward_right() {
   turn_right();
-  // while ultrasonic larger than value, do nothing
+  // while ultrasonic larger than value, keep moving forward
+  while (read_ultrasonic_sensor() < ULTRASONIC_TURN_VALUE) {
+    move_forward;
+  }
   turn_right();
+  }
   return;
 }
 
@@ -281,6 +290,8 @@ void setup() {
 }
 
 void loop() {
+
+  // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     solve_challenge();
     motor_l.stop();
@@ -288,6 +299,9 @@ void loop() {
     for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
       delay(10);
     }
+
+  // Otherwise, keep moving forward while keeping yourself in the centre using
+  // the IR sensors.
   } else {
     if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
       adjust_to_right();
@@ -296,7 +310,7 @@ void loop() {
     } else {
       move_forward();
     }
-  }/*
+  }
   
   /* DEBUG: Color Test
   struct color test = read_ldr_sensor();

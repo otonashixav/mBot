@@ -1,12 +1,6 @@
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
-struct color {
-    int r;
-    int g;
-    int b;
-};
-
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
 #define ULTRASONIC_THRESHOLD 300  // "close enough to wall to turn"
@@ -18,12 +12,10 @@ struct color {
 #define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
 #define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
 #define LED_DELAY 30              // response time of LDR
-#define INFRARED_NO_WALL          // further than which consider the bot not close to a wall
-#define IDEAL_DIVISOR 5           // 
-#define SMOOTHING 5               // 
 #define TURNING_SPEED 255         //
-#define TURN_DURATION 290         //
+#define TURN_DURATION 280         //
 #define FORWARD_INTERVAL 1000     //
+#define MUSIC_SPEED 64            // default 64
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -36,12 +28,12 @@ struct color {
 #define LED 13         // top led
 #define IR_L A1        // left infrared sensor
 #define IR_R A2        // right infrared sensor
-#define MIC_LOW A0     // low pass mic output
-#define MIC_HIGH A3    // high pass mic output
+#define MIC_LOW A3     // low pass mic output
+#define MIC_HIGH A0    // high pass mic output
 #define MOTOR_L M2     // left motor
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
-#define BUTON A7       // button
+#define BUTTON A7      // button
 
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
@@ -49,121 +41,11 @@ MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
-// motor functions
-void turn_left() {
-  motor_r.run(TURNING_SPEED);
-  motor_l.run(TURNING_SPEED);
-  delay(TURN_DURATION);
-  motor_r.stop();
-  motor_l.stop();
-  return;
-}
-
-void turn_right() {
-  motor_r.run(-TURNING_SPEED);
-  motor_l.run(-TURNING_SPEED);
-  delay(TURN_DURATION);
-  motor_r.stop();
-  motor_l.stop();
-  return;
-}
-
-void turn_180() {
-  turn_right();
-  turn_right();
-  return;
-}
-
-void move_forward() {    
-  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
-    adjust_to_right();
-  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
-    adjust_to_left();
-  } else {
-    motor_r.run(MAX_SPEED);
-    motor_l.run(-MAX_SPEED);
-  }
-  return;
-}
-
-// TODO: Review below code
-void turn_left_forward_left() {
-  turn_left();
-  // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
-    move_forward();
-  }
-  turn_left();
-  }
-  return;
-}
-
-void turn_right_forward_right() {
-  turn_right();
-  // while ultrasonic larger than value, keep moving forward
-  while (read_ultrasonic_sensor() < ULTRASONIC_THRESHOLD) {
-    move_forward();
-  }
-  turn_right();
-  }
-  return;
-}
-
-void adjust_to_left() {
-  motor_r.run(MAX_SPEED);
-  motor_l.run(-ADJUSTMENT_SPEED);
-  return;
-}
-
-void adjust_to_right() {
-  motor_r.run(ADJUSTMENT_SPEED);
-  motor_l.run(-MAX_SPEED);
-  return;
-}
-
-/*
-void forward_corrections() {
-  int left_ir = analogAvgRead(IR_L);
-  int right_ir = analogAvgRead(IR_R);
-  static int average_reading = INFRARED_THRESHOLD;
-  static int average_gradient = 0;
-  // Use the lowest reading
-  bool use_left = left_ir < right_ir;
-  int reading = use_left ? left_ir : right_ir;
-  if (reading < INFRARED_NO_WALL) {
-    // Update average readings if it senses a wall
-    average_reading += (reading - average_reading) / SMOOTHING;
-    average_gradient += (reading - prev_reading - average_gradient) / SMOOTHING;
-  }
-  if (average_reading < INFRARED_THRESHOLD) {
-    // Turn if below threshold
-    // Makes the gradient dependent on how close to the wall it is
-    int ideal_gradient = (INFRARED_THRESHOLD - average_reading) / IDEAL_DIVISOR;
-    int turn_sharpness = ideal_gradient - average_gradient * (1000 / INFRARED_PERIOD);
-    // Use constant sharpness?
-    //int turn_sharpness = ideal_gradient > average_gradient ? 55 : -55;
-    // +ve gradient/sharpness: away from wall
-    // Closer to left side: +ve gradient to right
-    // Closer to right side: +ve gradient to left
-    if (use_left) {
-      // Standardise +ve sharpness to left
-      turn_sharpness = -turn_sharpness;
-    }
-    if (turn_sharpness > 0) {
-      motor_l.run(MAX_SPEED - turn_sharpness);
-    } else {
-      motor_r.run(MAX_SPEED - turn_sharpness);
-    }
-  } else {
-    move_forward();
-  }
-}
-*/
-// victory theme
-
-void play_theme() {
-
-}
+struct color {
+    int r;
+    int g;
+    int b;
+};
 
 // sensor functions
 
@@ -214,6 +96,153 @@ struct color read_ldr_sensor() {
   return result;
 }
 
+// motor functions
+
+void adjust_to_left() {
+  motor_r.run(MAX_SPEED);
+  motor_l.run(-ADJUSTMENT_SPEED);
+  return;
+}
+
+void adjust_to_right() {
+  motor_r.run(ADJUSTMENT_SPEED);
+  motor_l.run(-MAX_SPEED);
+  return;
+}
+
+void turn_left() {
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(TURNING_SPEED);
+  delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
+  return;
+}
+
+void turn_right() {
+  motor_r.run(-TURNING_SPEED);
+  motor_l.run(-TURNING_SPEED);
+  delay(TURN_DURATION);
+  motor_r.stop();
+  motor_l.stop();
+  return;
+}
+
+void turn_180() {
+  turn_right();
+  turn_right();
+  return;
+}
+
+void move_forward() {    
+  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+    adjust_to_right();
+  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+    adjust_to_left();
+  } else {
+    motor_r.run(MAX_SPEED);
+    motor_l.run(-MAX_SPEED);
+  }
+  return;
+}
+
+// TODO: Review below code
+void turn_left_forward_left() {
+  turn_left();
+    move_forward();
+  // while ultrasonic larger than value, keep moving forward
+  while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
+    delay(50);
+  }
+  turn_left();
+  return;
+}
+
+void turn_right_forward_right() {
+  turn_right();
+  move_forward();
+  // while ultrasonic larger than value, keep moving forward
+  while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
+    delay(50);
+  }
+  turn_right();
+  return;
+}
+
+// victory theme
+void start_tune() {
+  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
+  delay(4000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
+  delay(4000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
+  delay(4000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_GS5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 6000/MUSIC_SPEED);
+  delay(8000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 4000/MUSIC_SPEED);
+  delay(4000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 30000/MUSIC_SPEED);
+  delay(32000/MUSIC_SPEED);
+  return;
+}
+
+void loop_tune() {
+  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_F5, 6000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 10000/MUSIC_SPEED);
+  delay(8000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
+  delay(6000/MUSIC_SPEED);
+  buzzer.tone(NOTE_A5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
+  delay(6000/MUSIC_SPEED);
+  buzzer.tone(NOTE_A5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_A5, 6000/MUSIC_SPEED);
+  delay(6000/MUSIC_SPEED);
+  return;
+}
+
+void loop_end_tune_1() {
+  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_E5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_F5, 6000/MUSIC_SPEED);
+  delay(6000/MUSIC_SPEED);
+  buzzer.tone(NOTE_D5, 54000/MUSIC_SPEED);
+  delay(54000/MUSIC_SPEED);
+  return;
+}
+
+void loop_end_tune_2() {
+  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
+  delay(12000/MUSIC_SPEED);
+  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
+  delay(6000/MUSIC_SPEED);
+  buzzer.tone(NOTE_C6, 54000/MUSIC_SPEED);
+  delay(54000/MUSIC_SPEED);
+  return;
+}
+
 // challenge functions
 /**
  * Attempts to solve the color challenge, then calls the appropriate function
@@ -236,10 +265,10 @@ bool solve_color() {
     // red
     turn_left();
   } else if (paper.b > 400) {
-    // green
+    // blue
     turn_right_forward_right();
   } else if (paper.g > 350) {
-    // blue
+    // green
     turn_right();
   } else {
     // black
@@ -255,7 +284,7 @@ bool solve_sound() {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
     } else if (mic_high > mic_low + MIC_DECIDE) {
-      turn_right()
+      turn_right();
     } else {
       // both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
       // have the same amplitude.
@@ -277,9 +306,12 @@ void solve_challenge() {
     return;
   } else {
     rgbled.setColor(50, 50, 50);
-    play_theme();
+    start_tune();
     while (analogRead(BUTTON) > 10) {
-      // do nothing? replay victory theme? 
+      loop_tune();
+      loop_end_tune_1();
+      loop_tune();
+      loop_end_tune_2();
     }
     rgbled.clear();
     return;
@@ -297,9 +329,12 @@ void setup() {
   pinMode(MOTOR_L, OUTPUT);
   pinMode(MOTOR_R, OUTPUT);
   pinMode(BUZZER, OUTPUT);
+  while (analogRead(BUTTON) > 10) {
+    delay(10);
+  }
 }
 
-void loop() {
+void loop() {/*
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     solve_challenge();
@@ -310,8 +345,12 @@ void loop() {
   // the IR sensors.
   } else {
     move_forward();
-  }
-  
+  }*/
+  Serial.print("Low: ");
+  Serial.print(analogRead(MIC_LOW));
+  Serial.print(" High: ");
+  Serial.println(analogRead(MIC_HIGH));
+  delay(500);
   /* DEBUG: Color Test
   struct color test = read_ldr_sensor();
   Serial.print("R");

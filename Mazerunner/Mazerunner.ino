@@ -30,7 +30,8 @@ struct color {
 
 #define FORWARD_INTERVAL 1000            //
 
-#define MUSIC_SPEED 64                   // default 64
+#define MUSIC_SPEED 2                    // default 2 (normal speed)
+#define MUSIC_ADJUST 20                  // play notes for this duration less than their full duration (in ms)
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -201,76 +202,63 @@ void turn_right_forward_right() {
 }
 
 // victory theme
+
+void play_note(int note, int duration, int wait) {
+  duration /= MUSIC_SPEED;
+  wait /= MUSIC_SPEED;
+  buzzer.tone(note, duration - MUSIC_ADJUST);
+  delay(duration + wait);
+  return;
+}
+
 void start_tune() {
-  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
-  delay(4000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
-  delay(4000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 4000/MUSIC_SPEED);
-  delay(4000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_GS5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 6000/MUSIC_SPEED);
-  delay(8000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 4000/MUSIC_SPEED);
-  delay(4000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 30000/MUSIC_SPEED);
-  delay(32000/MUSIC_SPEED);
+  play_note(NOTE_C6, 40, 40);
+  play_note(NOTE_C6, 40, 40);
+  play_note(NOTE_C6, 40, 40);
+  play_note(NOTE_C6, 240, 0);
+  play_note(NOTE_GS5, 240, 0);
+  play_note(NOTE_AS5, 240, 0);
+  play_note(NOTE_C6, 90, 90);
+  play_note(NOTE_AS5, 60, 0);
+  play_note(NOTE_C6, 720, 0);
   return;
 }
 
-void loop_tune() {
-  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_F5, 6000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 10000/MUSIC_SPEED);
-  delay(8000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
-  delay(6000/MUSIC_SPEED);
-  buzzer.tone(NOTE_A5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
-  delay(6000/MUSIC_SPEED);
-  buzzer.tone(NOTE_A5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_A5, 6000/MUSIC_SPEED);
-  delay(6000/MUSIC_SPEED);
+void loop_tune_1() {
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 240, 0);
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 60, 60);
+  play_note(NOTE_AS5, 240, 0);
+  play_note(NOTE_AS5, 60, 60);
+  play_note(NOTE_A5, 240, 0);
+  play_note(NOTE_AS5, 60, 60);
+  play_note(NOTE_A5, 240, 0);
+  play_note(NOTE_A5, 60, 60);
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 240, 0);
+  play_note(NOTE_E5, 240, 0);
+  play_note(NOTE_F5, 60, 60);
+  play_note(NOTE_D5, 1080, 0);
   return;
 }
 
-void loop_end_tune_1() {
-  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_E5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_F5, 6000/MUSIC_SPEED);
-  delay(6000/MUSIC_SPEED);
-  buzzer.tone(NOTE_D5, 54000/MUSIC_SPEED);
-  delay(54000/MUSIC_SPEED);
-  return;
-}
-
-void loop_end_tune_2() {
-  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_F5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_G5, 10000/MUSIC_SPEED);
-  delay(12000/MUSIC_SPEED);
-  buzzer.tone(NOTE_AS5, 6000/MUSIC_SPEED);
-  delay(6000/MUSIC_SPEED);
-  buzzer.tone(NOTE_C6, 54000/MUSIC_SPEED);
-  delay(54000/MUSIC_SPEED);
+void loop_tune_2() {
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 240, 0);
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 60, 60);
+  play_note(NOTE_AS5, 240, 0);
+  play_note(NOTE_AS5, 60, 60);
+  play_note(NOTE_A5, 240, 0);
+  play_note(NOTE_AS5, 60, 60);
+  play_note(NOTE_A5, 240, 0);
+  play_note(NOTE_A5, 60, 60);
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_F5, 240, 0);
+  play_note(NOTE_G5, 240, 0);
+  play_note(NOTE_AS5, 60, 60);
+  play_note(NOTE_C6, 1080, 0);
   return;
 }
 
@@ -336,13 +324,11 @@ void solve_challenge() {
   if (solve_color()) {
     return;
   } else {
-    rgbled.setColor(50, 50, 50);
+    rgbled.setColor(64, 64, 64);
     start_tune();
     while (analogRead(BUTTON) > 10) {
-      loop_tune();
-      loop_end_tune_1();
-      loop_tune();
-      loop_end_tune_2();
+      loop_tune_1();
+      loop_tune_2();
     }
     rgbled.clear();
     return;

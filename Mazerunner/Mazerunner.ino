@@ -30,7 +30,7 @@ struct color {
 
 #define FORWARD_INTERVAL 1000            //
 
-#define MUSIC_SPEED 2                    // default 2 (normal speed)
+#define MUSIC_SPEED 1                    // default 1 (normal speed)
 #define MUSIC_ADJUST 20                  // play notes for this duration less than their full duration (in ms)
 
 // pin definitions

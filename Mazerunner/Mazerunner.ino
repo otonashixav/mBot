@@ -1,21 +1,36 @@
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
+struct color {
+  int r;
+  int g;
+  int b;
+};
+
 // constant definitions
-#define ULTRASONIC_TIMEOUT 30000  // timeout for pulseIn
-#define ULTRASONIC_THRESHOLD 300  // "close enough to wall to turn"
-#define INFRARED_THRESHOLD_L 550  // "close enough to wall to adjust to left"
-#define INFRARED_THRESHOLD_R 550  // "close enough to wall to adjust to right"
-#define MIC_THRESHOLD 200         // "loud enough to be considered not noise"
-#define MIC_DECIDE 200            // threshold value to decide mic loudness
-#define MAX_SPEED 255             // max speed of motors
-#define ADJUSTMENT_SPEED 200      // speed to use when adjusting direction
-#define ADJUSTMENT_DELAY 1000     // time to stay at adjustment speed
-#define LED_DELAY 30              // response time of LDR
-#define TURNING_SPEED 255         //
-#define TURN_DURATION 280         //
-#define FORWARD_INTERVAL 1000     //
-#define MUSIC_SPEED 64            // default 64
+#define ULTRASONIC_TIMEOUT 30000         // timeout for pulseIn
+#define ULTRASONIC_THRESHOLD 600         // "close enough to wall to turn"
+
+#define INFRARED_THRESHOLD_L 650         // "close enough to wall to adjust to left" PREV: 550
+#define INFRARED_THRESHOLD_R 650         // "close enough to wall to adjust to right" PREV: 550
+#define SHARP_INFRARED_THRESHOLD_L 400   // "too close to wall to adjust to left"
+#define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
+
+#define MIC_THRESHOLD 200                // "loud enough to be considered not noise"
+#define MIC_DECIDE 200                   // threshold value to decide mic loudness
+
+#define MAX_SPEED 255                    // max speed of motors
+#define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
+#define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
+#define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
+#define TURNING_SPEED 255                //
+#define TURN_DURATION 255                //
+
+#define LED_DELAY 30                     // response time of LDR
+
+#define FORWARD_INTERVAL 1000            //
+
+#define MUSIC_SPEED 64                   // default 64
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -33,19 +48,13 @@
 #define MOTOR_L M2     // left motor
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
-#define BUTTON A7      // button
+#define BUTTON A7       // button
 
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
-
-struct color {
-    int r;
-    int g;
-    int b;
-};
 
 // sensor functions
 
@@ -110,6 +119,19 @@ void adjust_to_right() {
   return;
 }
 
+
+void adjust_to_sharp_left() {
+  motor_r.run(MAX_SPEED);
+  motor_l.run(-SHARP_ADJUSTMENT_SPEED);
+  return;
+}
+
+void adjust_to_sharp_right() {
+  motor_r.run(SHARP_ADJUSTMENT_SPEED);
+  motor_l.run(-MAX_SPEED);
+  return;
+}
+
 void turn_left() {
   motor_r.run(TURNING_SPEED);
   motor_l.run(TURNING_SPEED);
@@ -135,8 +157,12 @@ void turn_180() {
 }
 
 void move_forward() {    
-  if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+  if (analogAvgRead(IR_L) < SHARP_INFRARED_THRESHOLD_L) {
+    adjust_to_sharp_right();
+  } else if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
     adjust_to_right();
+  } else if (analogAvgRead(IR_R) < SHARP_INFRARED_THRESHOLD_R) {
+    adjust_to_sharp_left();
   } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
     adjust_to_left();
   } else {
@@ -149,22 +175,27 @@ void move_forward() {
 // TODO: Review below code
 void turn_left_forward_left() {
   turn_left();
-    move_forward();
-  // while ultrasonic larger than value, keep moving forward
+  move_forward();
+
+  // while ultrasonic larger than threshold, keep moving forward
   while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
-    delay(50);
+    delay(10);
   }
+
   turn_left();
   return;
 }
 
+
 void turn_right_forward_right() {
   turn_right();
   move_forward();
-  // while ultrasonic larger than value, keep moving forward
+
+  // while ultrasonic larger than threshold, keep moving forward
   while (read_ultrasonic_sensor() > ULTRASONIC_THRESHOLD) {
-    delay(50);
+    delay(10);
   }
+
   turn_right();
   return;
 }
@@ -253,7 +284,7 @@ void loop_end_tune_2() {
  *          false otherwise.
  */
 bool solve_color() {
-    struct color paper = read_ldr_sensor();
+  struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
   if (paper.r > 600 && paper.g > 600 && paper.b > 600) {
     // white
@@ -334,31 +365,36 @@ void setup() {
   }
 }
 
-void loop() {/*
+void loop() {
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     solve_challenge();
     for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
       delay(10);
     }
-  // Otherwise, keep moving forward while keeping yourself in the centre using
-  // the IR sensors.
+    // Otherwise, keep moving forward while keeping yourself in the centre using
+    // the IR sensors.
   } else {
     move_forward();
-  }*/
+  }/*
   Serial.print("Low: ");
   Serial.print(analogRead(MIC_LOW));
   Serial.print(" High: ");
   Serial.println(analogRead(MIC_HIGH));
   delay(500);
   /* DEBUG: Color Test
-  struct color test = read_ldr_sensor();
-  Serial.print("R");
-  Serial.print(test.r);
-  Serial.print(" G");
-  Serial.print(test.g);
-  Serial.print(" B");
-  Serial.print(test.b);
-  Serial.println("");
-  delay(1000);*/
+     struct color test = read_ldr_sensor();
+     Serial.print("R");
+     Serial.print(test.r);
+     Serial.print(" G");
+     Serial.print(test.g);
+     Serial.print(" B");
+     Serial.print(test.b);
+     Serial.println("");
+     delay(1000);*/
+
+  /* DEBUG: Ultrasonic Sensors
+     Serial.println(read_ultrasonic_sensor());
+     delay(1000);
+   */
 }

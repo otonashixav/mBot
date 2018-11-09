@@ -206,59 +206,59 @@ void turn_right_forward_right() {
 void play_note(int note, int duration, int wait) {
   duration /= MUSIC_SPEED;
   wait /= MUSIC_SPEED;
-  buzzer.tone(note, duration - MUSIC_ADJUST);
+  buzzer.tone(note, duration - MUSIC_ADJUST / MUSIC_SPEED);
   delay(duration + wait);
   return;
 }
 
 void start_tune() {
-  play_note(NOTE_C6, 40, 40);
-  play_note(NOTE_C6, 40, 40);
-  play_note(NOTE_C6, 40, 40);
-  play_note(NOTE_C6, 240, 0);
-  play_note(NOTE_GS5, 240, 0);
-  play_note(NOTE_AS5, 240, 0);
-  play_note(NOTE_C6, 90, 90);
-  play_note(NOTE_AS5, 60, 0);
-  play_note(NOTE_C6, 720, 0);
+  play_note(NOTE_C6, 80, 80);
+  play_note(NOTE_C6, 80, 80);
+  play_note(NOTE_C6, 80, 80);
+  play_note(NOTE_C6, 480, 0);
+  play_note(NOTE_GS5, 480, 0);
+  play_note(NOTE_AS5, 480, 0);
+  play_note(NOTE_C6, 180, 180);
+  play_note(NOTE_AS5, 120, 0);
+  play_note(NOTE_C6, 1440, 0);
   return;
 }
 
 void loop_tune_1() {
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 240, 0);
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 60, 60);
-  play_note(NOTE_AS5, 240, 0);
-  play_note(NOTE_AS5, 60, 60);
-  play_note(NOTE_A5, 240, 0);
-  play_note(NOTE_AS5, 60, 60);
-  play_note(NOTE_A5, 240, 0);
-  play_note(NOTE_A5, 60, 60);
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 240, 0);
-  play_note(NOTE_E5, 240, 0);
-  play_note(NOTE_F5, 60, 60);
-  play_note(NOTE_D5, 1080, 0);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 480, 0);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 120, 120);
+  play_note(NOTE_AS5, 480, 0);
+  play_note(NOTE_AS5, 120, 120);
+  play_note(NOTE_A5, 480, 0);
+  play_note(NOTE_AS5, 120, 120);
+  play_note(NOTE_A5, 480, 0);
+  play_note(NOTE_A5, 120, 120);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 480, 0);
+  play_note(NOTE_E5, 480, 0);
+  play_note(NOTE_F5, 120, 120);
+  play_note(NOTE_D5, 2160, 0);
   return;
 }
 
 void loop_tune_2() {
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 240, 0);
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 60, 60);
-  play_note(NOTE_AS5, 240, 0);
-  play_note(NOTE_AS5, 60, 60);
-  play_note(NOTE_A5, 240, 0);
-  play_note(NOTE_AS5, 60, 60);
-  play_note(NOTE_A5, 240, 0);
-  play_note(NOTE_A5, 60, 60);
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_F5, 240, 0);
-  play_note(NOTE_G5, 240, 0);
-  play_note(NOTE_AS5, 60, 60);
-  play_note(NOTE_C6, 1080, 0);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 480, 0);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 120, 120);
+  play_note(NOTE_AS5, 480, 0);
+  play_note(NOTE_AS5, 120, 120);
+  play_note(NOTE_A5, 480, 0);
+  play_note(NOTE_AS5, 120, 120);
+  play_note(NOTE_A5, 480, 0);
+  play_note(NOTE_A5, 120, 120);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_F5, 480, 0);
+  play_note(NOTE_G5, 480, 0);
+  play_note(NOTE_AS5, 120, 120);
+  play_note(NOTE_C6, 2160, 0);
   return;
 }
 

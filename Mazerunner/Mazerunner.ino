@@ -173,7 +173,7 @@ void move_forward() {
   return;
 }
 
-// TODO: Review below code
+// TODO: Review below code. //consider put move_forward() function into the while loop?
 void turn_left_forward_left() {
   turn_left();
   move_forward();

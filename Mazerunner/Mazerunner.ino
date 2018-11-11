@@ -50,7 +50,7 @@ struct color {
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
 #define BUTTON A7       // button
-
+F
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
@@ -67,7 +67,7 @@ MeBuzzer buzzer(BUZZER);
  * @return         The average value of 5 readings from the pin
  */
 int analogAvgRead(int pin) {
-  int average = 0;
+  int average = 0; //change this variable name to "sum" ? Since we are taking the sum to be devided by 5 and returning the average
   for (int i = 0; i < 5; i += 1) {
     average += analogRead(pin);
   }

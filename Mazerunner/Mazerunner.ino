@@ -17,7 +17,7 @@ struct color {
 #define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
 
 #define MIC_THRESHOLD 200                // "loud enough to be considered not noise"
-#define MIC_DECIDE 200                   // threshold value to decide mic loudness
+#define MIC_DECIDE 200                   // threshold value to decide the sound frequency that is louder 
 
 #define MAX_SPEED 255                    // max speed of motors
 #define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
@@ -50,7 +50,7 @@ struct color {
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
 #define BUTTON A7       // button
-F
+
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
@@ -323,6 +323,10 @@ bool solve_sound() {
   }
 }
 
+/**
+ * Attempts to decide which challenge it needs to solve, then calls the appropriate function
+ * to solve the challenge. Play the celebratory tune at the end of the maze
+ */
 void solve_challenge() {
   motor_l.stop();
   motor_r.stop();

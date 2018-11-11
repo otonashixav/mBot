@@ -296,6 +296,14 @@ bool solve_color() {
   return true;
 }
 
+/**
+ * Attempts to solve the sound challenge, then calls the appropriate function
+ * to move the mBot accordingly. Returns true if a challenge was found and
+ * solved, and false otherwise.
+ * 
+ * @return  true if instruction sounds were detected and the appropriate action taken, and
+ *          false otherwise.
+ */
 bool solve_sound() {
   int mic_low = analogAvgRead(MIC_LOW);
   int mic_high = analogAvgRead(MIC_HIGH);
@@ -305,8 +313,8 @@ bool solve_sound() {
     } else if (mic_high > mic_low + MIC_DECIDE) {
       turn_right();
     } else {
-      // both are not louder than the other mic by MIC_DECIDE, therefore, two sounds 
-      // have the same amplitude.
+      // both are not louder than the other mic by MIC_DECIDE, 
+      // therefore, two sounds have the same amplitude.
       turn_180();
     }
     return true;

@@ -312,6 +312,15 @@ bool solve_color() {
 bool solve_sound() {
   int mic_low = analogAvgRead(MIC_LOW);
   int mic_high = analogAvgRead(MIC_HIGH);
+  int temp_high;
+  int temp_low;
+  for (int i = 1; i < 10; i += 1) {
+    temp_high = analogAvgRead(MIC_HIGH);
+    temp_low = analogAvgRead(MIC_LOW);
+    mic_high = temp_high < mic_high ? temp_high : mic_high;
+    mic_low = temp_low < mic_low ? temp_low : mic_low;
+    delay(10);
+  }
   if (mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();

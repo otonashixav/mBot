@@ -274,28 +274,42 @@ void loop_tune_2() {
  */
 bool solve_color() {
   struct color paper = read_ldr_sensor();
+  Serial.print(paper.r);
+  Serial.print(" ");
+  Serial.print(paper.g);
+  Serial.print(" ");
+  Serial.print(paper.b);
+  Serial.print(" ");
   float red_green = (float) paper.r / paper.g;
+  Serial.print(red_green);
+  Serial.print(" ");
   if (red_green > 2.1) {
     // red
-    turn_left();
+    // turn_left();
+    Serial.println("Red");
   } else if (red_green > 1.6) {
     // orange
-    turn_left_forward_left();
+    // turn_left_forward_left();
+    Serial.println("Orange");
   } else if (red_green > 1.15) {
     if (paper.r > 400) {
       // white
-      turn_180();
+      // turn_180();
+      Serial.println("White");
     } else {
       // black
+      Serial.print("Black");
       return false;
     }
   } else {
     if (paper.b > paper.r) {
       // blue
-      turn_right_forward_right();
+      // turn_right_forward_right();
+      Serial.println("Blue");
     } else {
       // green
-      turn_right();
+      // turn_right();
+      Serial.println("Green");
     }
   }
   return true;
@@ -321,19 +335,29 @@ bool solve_sound() {
     mic_low = temp_low < mic_low ? temp_low : mic_low;
     delay(10);
   }
+  Serial.print(" ");
+  Serial.print(mic_low);
+  Serial.print(" ");
+  Serial.print(mic_high);
+  Serial.print(" ");
   if (mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE_LOW) {
-      turn_left();
+      // turn_left();
+      Serial.println("Left");
     } else if (mic_high > mic_low + MIC_DECIDE_HIGH) {
-      turn_right();
+      // turn_right();
+      Serial.println("Right");
     } else {
       // both are not louder than the other mic by MIC_DECIDE, 
       // therefore, two sounds have the same amplitude.
-      turn_180();
+      // turn_180();
+      Serial.println("U");
     }
     return true;
   } else {
-    return false;
+    Serial.println("Finish");
+    // return false;
+    return true;
   }
 }
 
@@ -390,7 +414,7 @@ void loop() {
     // Otherwise, keep moving forward while keeping yourself in the centre using
     // the IR sensors.
   } else {
-    move_forward();
+    // move_forward();
   }/*
      Serial.print("Low: ");
      Serial.print(analogAvgRead(MIC_LOW));
@@ -405,8 +429,12 @@ void loop() {
      Serial.print(test.g);
      Serial.print(" B");
      Serial.print(test.b);
+     Serial.print(" L");
+     Serial.print(analogAvgRead(IR_L));
+     Serial.print(" R");
+     Serial.print(analogAvgRead(IR_R));
      Serial.println("");
-     delay(1000);*/
+     delay(1000);
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());

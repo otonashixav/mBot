@@ -44,8 +44,8 @@ struct color {
 #define LED 13         // top led
 #define IR_L A1        // left infrared sensor
 #define IR_R A2        // right infrared sensor
-#define MIC_LOW A3     // low pass mic output
-#define MIC_HIGH A0    // high pass mic output
+#define MIC_LOW A0     // low pass mic output
+#define MIC_HIGH A3    // high pass mic output
 #define MOTOR_L M2     // left motor
 #define MOTOR_R M1     // right motor
 #define BUZZER 8       // buzzer
@@ -376,9 +376,9 @@ void loop() {
     move_forward();
   }/*
   Serial.print("Low: ");
-  Serial.print(analogRead(MIC_LOW));
+  Serial.print(analogAvgRead(MIC_LOW));
   Serial.print(" High: ");
-  Serial.println(analogRead(MIC_HIGH));
+  Serial.println(analogAvgRead(MIC_HIGH));
   delay(500);
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();

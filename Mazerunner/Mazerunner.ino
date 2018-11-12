@@ -17,7 +17,8 @@ struct color {
 #define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
 
 #define MIC_THRESHOLD 50                 // "loud enough to be considered not noise"
-#define MIC_DECIDE 200                   // threshold value to decide the sound frequency that is louder 
+#define MIC_DECIDE_LOW 200               // threshold value to decide that low is louder
+#define MIC_DECIDE_HIGH 100              // threshold value to decide that high is louder
 
 #define MAX_SPEED 255                    // max speed of motors
 #define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
@@ -67,11 +68,11 @@ MeBuzzer buzzer(BUZZER);
  * @return         The average value of 5 readings from the pin
  */
 int analogAvgRead(int pin) {
-  int average = 0; //change this variable name to "sum" ? Since we are taking the sum to be devided by 5 and returning the average.
-  for (int i = 0; i < 5; i += 1) {
-    average += analogRead(pin);
+  int sum = 0;
+  for (int i = 0; i < 10; i += 1) {
+    sum += analogRead(pin);
   }
-  return average / 5; // rounds down but negligible for our purposes
+  return sum / 10; // rounds down but negligible for our purposes 
 }
 
 /**
@@ -322,9 +323,9 @@ bool solve_sound() {
     delay(10);
   }
   if (mic_high >= MIC_THRESHOLD) {
-    if (mic_low > mic_high + MIC_DECIDE) {
+    if (mic_low > mic_high + MIC_DECIDE_LOW) {
       turn_left();
-    } else if (mic_high > mic_low + MIC_DECIDE) {
+    } else if (mic_high > mic_low + MIC_DECIDE_HIGH) {
       turn_right();
     } else {
       // both are not louder than the other mic by MIC_DECIDE, 
@@ -350,14 +351,16 @@ void solve_challenge() {
   if (solve_color()) {
     return;
   } else {
-    rgbled.setColor(64, 64, 64);
-    start_tune();
-    while (analogRead(BUTTON) > 10) {
-      loop_tune_1();
-      loop_tune_2();
+    if (!solve_sound()) {
+      rgbled.setColor(64, 64, 64);
+      start_tune();
+      while (analogRead(BUTTON) > 10) {
+        loop_tune_1();
+        loop_tune_2();
+      }
+      rgbled.clear();
+      return;
     }
-    rgbled.clear();
-    return;
   }
 }
 

@@ -16,7 +16,7 @@ struct color {
 #define SHARP_INFRARED_THRESHOLD_L 400   // "too close to wall to adjust to left"
 #define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
 
-#define MIC_THRESHOLD 200                // "loud enough to be considered not noise"
+#define MIC_THRESHOLD 50                 // "loud enough to be considered not noise"
 #define MIC_DECIDE 200                   // threshold value to decide the sound frequency that is louder 
 
 #define MAX_SPEED 255                    // max speed of motors
@@ -274,24 +274,29 @@ void loop_tune_2() {
 bool solve_color() {
   struct color paper = read_ldr_sensor();
   // solve accordingly; TODO
-  if (paper.r > 600 && paper.g > 600 && paper.b > 600) {
-    // white
-    turn_180();
-  } else if (paper.r > 700) {
-    // orange
-    turn_left_forward_left();
-  } else if (paper.r > 600) {
+  float red_green = (float) paper.r / paper.g;
+  if (red_green > 2.1) {
     // red
     turn_left();
-  } else if (paper.b > 400) {
-    // blue
-    turn_right_forward_right();
-  } else if (paper.g > 350) {
-    // green
-    turn_right();
+  } else if (red_green > 1.6) {
+    // orange
+    turn_left_forward_left();
+  } else if (red_green > 1.15) {
+    if (paper.r > 400) {
+      // white
+      turn_180();
+    } else {
+      // black
+      return false;
+    }
   } else {
-    // black
-    return false;
+    if (paper.b > paper.r) {
+      // blue
+      turn_right_forward_right();
+    } else {
+      // green
+      turn_right();
+    }
   }
   return true;
 }
@@ -307,7 +312,7 @@ bool solve_color() {
 bool solve_sound() {
   int mic_low = analogAvgRead(MIC_LOW);
   int mic_high = analogAvgRead(MIC_HIGH);
-  if (mic_low >= MIC_THRESHOLD || mic_high >= MIC_THRESHOLD) {
+  if (mic_high >= MIC_THRESHOLD) {
     if (mic_low > mic_high + MIC_DECIDE) {
       turn_left();
     } else if (mic_high > mic_low + MIC_DECIDE) {

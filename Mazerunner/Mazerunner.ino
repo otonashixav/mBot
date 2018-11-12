@@ -274,7 +274,6 @@ void loop_tune_2() {
  */
 bool solve_color() {
   struct color paper = read_ldr_sensor();
-  // solve accordingly; TODO
   float red_green = (float) paper.r / paper.g;
   if (red_green > 2.1) {
     // red
@@ -338,30 +337,26 @@ bool solve_sound() {
   }
 }
 
+void finish_race() {
+  rgbled.setColor(100, 100, 100);
+  start_tune();
+  while (analogRead(BUTTON) > 10) {
+    loop_tune_1();
+    loop_tune_2();
+  }
+  rgbled.clear();
+  return;
+}
+
 /**
  * Attempts to decide which challenge it needs to solve, then calls the appropriate function
  * to solve the challenge. Play the celebratory tune at the end of the maze
  */
 void solve_challenge() {
-  motor_l.stop();
-  motor_r.stop();
-  // if (solve_sound()) {
-  //   return;
-  // } else 
-  if (solve_color()) {
-    return;
-  } else {
-    if (!solve_sound()) {
-      rgbled.setColor(64, 64, 64);
-      start_tune();
-      while (analogRead(BUTTON) > 10) {
-        loop_tune_1();
-        loop_tune_2();
-      }
-      rgbled.clear();
-      return;
-    }
+  if (!solve_color() && !solve_sound()) {
+    finish_race();
   }
+  return;
 }
 
 void setup() {
@@ -383,20 +378,25 @@ void setup() {
 void loop() {
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
-    solve_challenge();
-    for (int time = 0; digitalRead(LINE) == LOW && time < TURN_DURATION; time += 10) {
-      delay(10);
+    motor_l.stop();
+    motor_r.stop();
+    for (int i = 0; i < 10; i += 1) {
+      delay(20);
+      if (digitalRead(LINE) != LOW) {
+        return;
+      }
     }
+    solve_challenge();
     // Otherwise, keep moving forward while keeping yourself in the centre using
     // the IR sensors.
   } else {
     move_forward();
   }/*
-  Serial.print("Low: ");
-  Serial.print(analogAvgRead(MIC_LOW));
-  Serial.print(" High: ");
-  Serial.println(analogAvgRead(MIC_HIGH));
-  delay(500);
+     Serial.print("Low: ");
+     Serial.print(analogAvgRead(MIC_LOW));
+     Serial.print(" High: ");
+     Serial.println(analogAvgRead(MIC_HIGH));
+     delay(500);
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
      Serial.print("R");

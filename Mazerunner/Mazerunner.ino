@@ -56,6 +56,13 @@ struct color {
 #define BUZZER 8       // buzzer
 #define BUTTON A7       // button
 
+// debug log
+#define DEBUG_PERIOD 5000
+#define LOG_CAP 10
+#define LOG_COL 5
+int debug_curr = 0;
+int debug_log[LOG_CAP][LOG_COL] = {0};
+
 // assign classes
 MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
@@ -182,6 +189,9 @@ void move_forward() {
     motor_r.run(MAX_SPEED);
     motor_l.run(-MAX_SPEED);
   }
+  if (analogRead(BUTTON) < 10) {
+    debug_print_loop();
+  }
   return;
 }
 
@@ -296,6 +306,35 @@ void challenge_complete() {
   return;
 }
 
+void debug_record(int values[LOG_COL - 1]) {
+  int curr = debug_curr % LOG_CAP;
+  debug_log[curr][0] = debug_curr;
+  for (int col = 0; col < LOG_COL; col += 1) {
+    debug_log[curr][col + 1] = values[col];
+  }
+  debug_curr += 1;
+}
+
+void debug_print_loop() {
+  motor_r.stop();
+  motor_l.stop();
+  play_note(NOTE_C6, 500, 0);
+  unsigned long last_ms = millis();
+  while (analogRead(BUTTON) > 10) { 
+    if (millis() >= last_ms + DEBUG_PERIOD) {
+      last_ms += DEBUG_PERIOD;
+      for (int row = 0; row < LOG_CAP; row += 1) {
+        for (int col = 0; col < LOG_COL; col += 1) {
+          Serial.print(debug_log[row][col]);
+          Serial.print(" ");
+        }
+        Serial.println("");
+      }
+    }
+  }
+  play_note(NOTE_C6, 100, 400);
+}
+
 float find_intensity(int value) {
   return -log(1 - (float) value / 1023);
 }
@@ -312,36 +351,45 @@ float find_intensity(int value) {
 bool solve_color() {
   struct color paper = read_ldr_sensor();
   float red_green = (float) paper.r / paper.g;
+  int debug_values[] = {0, paper.r, paper.g, paper.b};
   if (red_green > 1.6) {
     if ((find_intensity(paper.g) - find_intensity(paper.c)) > 0.2) {
       // orange 0.21
+      debug_values[0] = 1;
       rgbled.setColor(128, 64, 0);
       turn_left_forward_left();
     } else {
       // red 0.19
+      debug_values[0] = 2;
       rgbled.setColor(192, 0, 0);
       turn_left();
     }
   } else if (red_green > 1.15) {
     if (paper.r > 400) {
       // white
+      debug_values[0] = 3;
       rgbled.setColor(64, 64, 64);
       turn_180();
     } else {
       // black
+      debug_values[0] = 4;
+      debug_record(debug_values);
       return false;
     }
   } else {
     if (paper.b > paper.r) {
       // blue
+      debug_values[0] = 5;
       rgbled.setColor(0, 0, 192);
       turn_right_forward_right();
     } else {
       // green
+      debug_values[0] = 6;
       rgbled.setColor(0, 192, 0);
       turn_right();
     }
   }
+  debug_record(debug_values);
   return true;
 }
 
@@ -365,24 +413,34 @@ bool solve_sound() {
     low_freq = temp_low < low_freq ? temp_low : low_freq;
     delay(10);
   }
+  int debug_values[] = {0, high_freq, low_freq, 0};
   if (high_freq < MIC_THRESHOLD_HIGH && low_freq < MIC_THRESHOLD_LOW) {
+    debug_values[0] = 41;
+    debug_record(debug_values);
     return false;
   }
   if (low_freq > high_freq + MIC_DECIDE_LOW) {
+    debug_values[0] = 42;
     turn_left();
   } else if (high_freq > low_freq + MIC_DECIDE_HIGH) {
+    debug_values[0] = 43;
     turn_right();
   } else {
     // both are not louder than the other mic by MIC_DECIDE, 
     // therefore, two sounds have the same amplitude.
+    debug_values[0] = 44;
     turn_180();
   }
+  debug_record(debug_values);
   return true;
 }
 
 void finish_race() {
   start_tune();
   while (1) {
+    if (analogRead(BUTTON) < 10) {
+      debug_print_loop();
+    }
     loop_tune_1();
     loop_tune_2();
   }

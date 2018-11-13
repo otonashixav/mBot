@@ -24,8 +24,9 @@ struct color {
 #define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
 #define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
 #define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
-#define TURNING_SPEED 255                //
+#define TURNING_SPEED 200                //
 #define TURN_DURATION 255                //
+#define TURN_DURATION2 400                //
 
 #define LED_DELAY 30                     // response time of LDR
 
@@ -136,7 +137,7 @@ void adjust_to_sharp_right() {
 
 void turn_left() {
   motor_r.run(TURNING_SPEED);
-  motor_l.run(TURNING_SPEED);
+  motor_l.run(MAX_SPEED);
   delay(TURN_DURATION);
   motor_r.stop();
   motor_l.stop();
@@ -144,7 +145,7 @@ void turn_left() {
 }
 
 void turn_right() {
-  motor_r.run(-TURNING_SPEED);
+  motor_r.run(-MAX_SPEED);
   motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION);
   motor_r.stop();
@@ -184,7 +185,13 @@ void turn_left_forward_left() {
     delay(10);
   }
 
-  turn_left();
+  //turn_left();
+
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(MAX_SPEED);
+  delay(TURN_DURATION2);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -198,7 +205,13 @@ void turn_right_forward_right() {
     delay(10);
   }
 
-  turn_right();
+  //turn_right();
+
+  motor_r.run(-MAX_SPEED);
+  motor_l.run(-TURNING_SPEED);
+  delay(TURN_DURATION2);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -275,7 +288,7 @@ void loop_tune_2() {
 bool solve_color() {
   struct color paper = read_ldr_sensor();
   float red_green = (float) paper.r / paper.g;
-  if (red_green > 2.1) {
+  if (red_green > 2.05) { //2.1
     // red
     turn_left();
   } else if (red_green > 1.6) {
@@ -392,21 +405,21 @@ void loop() {
   } else {
     move_forward();
   }/*
-     Serial.print("Low: ");
-     Serial.print(analogAvgRead(MIC_LOW));
-     Serial.print(" High: ");
-     Serial.println(analogAvgRead(MIC_HIGH));
-     delay(500);
+      Serial.print("Low: ");
+      Serial.print(analogAvgRead(MIC_LOW));
+      Serial.print(" High: ");
+      Serial.println(analogAvgRead(MIC_HIGH));
+      delay(500);
   /* DEBUG: Color Test
-     struct color test = read_ldr_sensor();
-     Serial.print("R");
-     Serial.print(test.r);
-     Serial.print(" G");
-     Serial.print(test.g);
-     Serial.print(" B");
-     Serial.print(test.b);
-     Serial.println("");
-     delay(1000);*/
+  struct color test = read_ldr_sensor();
+  Serial.print("R");
+  Serial.print(test.r);
+  Serial.print(" G");
+  Serial.print(test.g);
+  Serial.print(" B");
+  Serial.print(test.b);
+  Serial.println("");
+  delay(1000);*/
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());

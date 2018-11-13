@@ -283,6 +283,13 @@ void loop_tune_2() {
   return;
 }
 
+float find_intensity_ratio(int color_a, int color_b, int clear) {
+  float intensity_a = log(1 - (float) color_a / 1023);
+  float intensity_b = log(1 - (float) color_b / 1023);
+  float intensity_c = log(1 - (float) clear / 1023);
+  return (intensity_a - intensity_c) / (intensity_b - intensity_c);
+}
+
 // challenge functions
 /**
  * Attempts to solve the color challenge, then calls the appropriate function
@@ -402,10 +409,10 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
-  ir_tshold_l = calibrateIR(IR_L) /10 *9;
-  ir_tshold_r = calibrateIR(IR_R) /10 *9;
-  ir_shrp_tshold_l = ir_tshold_l /10 *7
-    ir_shrp_tshold_r = ir_tshold_r /10 *7;
+  ir_tshold_l = calibrateIR(IR_L) / 10 * 9;
+  ir_tshold_r = calibrateIR(IR_R) / 10 * 9;
+  ir_shrp_tshold_l = ir_tshold_l / 10 * 7;
+  ir_shrp_tshold_r = ir_tshold_r / 10 * 7;
 
   Serial.println(ir_tshold_l);
   Serial.println(ir_tshold_r);
@@ -413,7 +420,11 @@ void setup() {
   Serial.println(ir_shrp_tshold_r);
 }
 
-void loop() {/*
+void loop() {
+  struct color test = read_ldr_sensor();
+  Serial.println(find_intensity_ratio(test.r, test.g, test.c));
+  delay(200);
+  /*
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     motor_l.stop();
@@ -430,14 +441,6 @@ void loop() {/*
   } else {
     move_forward();
   }
-<<<<<<< HEAD
-     Serial.print("Low: ");
-     Serial.print(analogAvgRead(MIC_LOW));
-     Serial.print(" High: ");
-     Serial.println(analogAvgRead(MIC_HIGH));
-     delay(500);
-  /* */DEBUG: Color Test
-=======
 
   /* DEBUG: Mic Test
      Serial.print("Low: ");
@@ -447,7 +450,6 @@ void loop() {/*
      delay(500);*/
 
   /* DEBUG: Color Test
->>>>>>> a9d7d22919128d95b36a0b9c6c380a446cf25252
      struct color test = read_ldr_sensor();
      Serial.print("R");
      Serial.print(test.r);
@@ -461,8 +463,4 @@ void loop() {/*
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());
      delay(1000);*/
-
-
-
-
 }

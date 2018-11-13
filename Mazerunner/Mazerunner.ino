@@ -2,6 +2,7 @@
 #include "mCore.h"     // mcore
 
 struct color {
+  int c;
   int r;
   int g;
   int b;
@@ -94,15 +95,16 @@ long read_ultrasonic_sensor() {
 
 struct color read_ldr_sensor() {
   struct color result;
+  result.c = analogAvgRead(LIGHT);
   rgbled.setColor(255, 0, 0);
   delay(LED_DELAY);
-  result.r = analogRead(LIGHT);
+  result.r = analogAvgRead(LIGHT);
   rgbled.setColor(0, 255, 0);
   delay(LED_DELAY);
-  result.g = analogRead(LIGHT);
+  result.g = analogAvgRead(LIGHT);
   rgbled.setColor(0, 0, 255);
   delay(LED_DELAY);
-  result.b = analogRead(LIGHT);
+  result.b = analogAvgRead(LIGHT);
   rgbled.clear();
   return result;
 }
@@ -375,7 +377,7 @@ void setup() {
   }
 }
 
-void loop() {
+void loop() {/*
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
     motor_l.stop();
@@ -391,13 +393,13 @@ void loop() {
     // the IR sensors.
   } else {
     move_forward();
-  }/*
+  }
      Serial.print("Low: ");
      Serial.print(analogAvgRead(MIC_LOW));
      Serial.print(" High: ");
      Serial.println(analogAvgRead(MIC_HIGH));
      delay(500);
-  /* DEBUG: Color Test
+  /* */DEBUG: Color Test
      struct color test = read_ldr_sensor();
      Serial.print("R");
      Serial.print(test.r);
@@ -406,7 +408,7 @@ void loop() {
      Serial.print(" B");
      Serial.print(test.b);
      Serial.println("");
-     delay(1000);*/
+     delay(1000);
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());

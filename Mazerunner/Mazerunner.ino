@@ -25,8 +25,9 @@ struct color {
 #define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
 #define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
 #define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
-#define TURNING_SPEED 255                //
+#define TURNING_SPEED 200                //
 #define TURN_DURATION 255                //
+#define TURN_DURATION2 400                //
 
 #define LED_DELAY 30                     // response time of LDR
 
@@ -58,6 +59,11 @@ MeDCMotor motor_l(MOTOR_L);
 MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
+
+int ir_tshold_l;
+int ir_tshold_r;
+int ir_shrp_tshold_l;
+int ir_shrp_tshold_r; 
 
 // sensor functions
 
@@ -138,7 +144,7 @@ void adjust_to_sharp_right() {
 
 void turn_left() {
   motor_r.run(TURNING_SPEED);
-  motor_l.run(TURNING_SPEED);
+  motor_l.run(MAX_SPEED);
   delay(TURN_DURATION);
   motor_r.stop();
   motor_l.stop();
@@ -146,7 +152,7 @@ void turn_left() {
 }
 
 void turn_right() {
-  motor_r.run(-TURNING_SPEED);
+  motor_r.run(-MAX_SPEED);
   motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION);
   motor_r.stop();
@@ -161,13 +167,13 @@ void turn_180() {
 }
 
 void move_forward() {    
-  if (analogAvgRead(IR_L) < SHARP_INFRARED_THRESHOLD_L) {
+  if (analogAvgRead(IR_L) < ir_shrp_tshold_l) {
     adjust_to_sharp_right();
-  } else if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+  } else if (analogAvgRead(IR_L) < ir_tshold_l) {
     adjust_to_right();
-  } else if (analogAvgRead(IR_R) < SHARP_INFRARED_THRESHOLD_R) {
+  } else if (analogAvgRead(IR_R) < ir_shrp_tshold_r) {
     adjust_to_sharp_left();
-  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+  } else if (analogAvgRead(IR_R) < ir_tshold_r) {
     adjust_to_left();
   } else {
     motor_r.run(MAX_SPEED);
@@ -186,7 +192,13 @@ void turn_left_forward_left() {
     delay(10);
   }
 
-  turn_left();
+  //turn_left();
+
+  motor_r.run(TURNING_SPEED);
+  motor_l.run(MAX_SPEED);
+  delay(TURN_DURATION2);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -200,7 +212,13 @@ void turn_right_forward_right() {
     delay(10);
   }
 
-  turn_right();
+  //turn_right();
+
+  motor_r.run(-MAX_SPEED);
+  motor_l.run(-TURNING_SPEED);
+  delay(TURN_DURATION2);
+  motor_r.stop();
+  motor_l.stop();
   return;
 }
 
@@ -277,7 +295,7 @@ void loop_tune_2() {
 bool solve_color() {
   struct color paper = read_ldr_sensor();
   float red_green = (float) paper.r / paper.g;
-  if (red_green > 2.1) {
+  if (red_green > 2.05) { //2.1
     // red
     turn_left();
   } else if (red_green > 1.6) {
@@ -297,7 +315,7 @@ bool solve_color() {
       turn_right_forward_right();
     } else {
       // green
-      turn_right();
+      turn_left_forward_left();
     }
   }
   return true;
@@ -361,6 +379,15 @@ void solve_challenge() {
   return;
 }
 
+int calibrateIR(int pin) {
+  int sum = 0;
+  for (int i = 0; i < 32; i += 1) {
+    sum += analogRead(pin);
+    delay(10);
+  }
+  return sum / 32; // rounds down but negligible for our purposes 
+}
+
 void setup() {
   Serial.begin(9600);
   pinMode(IR_L, INPUT);
@@ -375,6 +402,15 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
+  ir_tshold_l = calibrateIR(IR_L) /10 *9;
+  ir_tshold_r = calibrateIR(IR_R) /10 *9;
+  ir_shrp_tshold_l = ir_tshold_l /10 *7
+    ir_shrp_tshold_r = ir_tshold_r /10 *7;
+
+  Serial.println(ir_tshold_l);
+  Serial.println(ir_tshold_r);
+  Serial.println(ir_shrp_tshold_l);
+  Serial.println(ir_shrp_tshold_r);
 }
 
 void loop() {/*
@@ -394,12 +430,24 @@ void loop() {/*
   } else {
     move_forward();
   }
+<<<<<<< HEAD
      Serial.print("Low: ");
      Serial.print(analogAvgRead(MIC_LOW));
      Serial.print(" High: ");
      Serial.println(analogAvgRead(MIC_HIGH));
      delay(500);
   /* */DEBUG: Color Test
+=======
+
+  /* DEBUG: Mic Test
+     Serial.print("Low: ");
+     Serial.print(analogAvgRead(MIC_LOW));
+     Serial.print(" High: ");
+     Serial.prin8tln(analogAvgRead(MIC_HIGH));
+     delay(500);*/
+
+  /* DEBUG: Color Test
+>>>>>>> a9d7d22919128d95b36a0b9c6c380a446cf25252
      struct color test = read_ldr_sensor();
      Serial.print("R");
      Serial.print(test.r);
@@ -412,6 +460,9 @@ void loop() {/*
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());
-     delay(1000);
-   */
+     delay(1000);*/
+
+
+
+
 }

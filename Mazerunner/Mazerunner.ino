@@ -32,7 +32,7 @@ struct color {
 #define TURN_SPEED_MULTIPLIER 0.8        // multiplier
 
 #define LED_DELAY 30                     // response time of LDR
-#define ORANGE_THRESHOLD 0.2             // 
+#define ORANGE_THRESHOLD 0.2f            // 
 
 #define FORWARD_INTERVAL 1000            //
 
@@ -472,7 +472,7 @@ void loop() {
 
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
-     Serial.print(find_intensity(test.g) - find_intensity(test.c));
+     Serial.print(find_intensity(test.g) - find_intensity(test.c), 7);
      Serial.print(find_intensity(test.g) - find_intensity(test.c) > ORANGE_THRESHOLD ? "Orange" : "Red");
      Serial.print("\t");
      Serial.print(test.c);

@@ -315,17 +315,17 @@ bool solve_color() {
   if (red_green > 1.6) {
     if (find_intensity(paper.g) - find_intensity(paper.c) > 0.2) {
       // orange 0.21
-      rgbled.set(170, 85, 0);
+      rgbled.setColor(170, 85, 0);
       turn_left_forward_left();
     } else {
       // red 0.19
-      rgbled.set(255, 0, 0);
+      rgbled.setColor(255, 0, 0);
       turn_left();
     }
   } else if (red_green > 1.15) {
     if (paper.r > 400) {
       // white
-      rgbled.set(85, 85, 85);
+      rgbled.setColor(85, 85, 85);
       turn_180();
     } else {
       // black
@@ -334,11 +334,11 @@ bool solve_color() {
   } else {
     if (paper.b > paper.r) {
       // blue
-      rgbled.set(0, 0, 255);
+      rgbled.setColor(0, 0, 255);
       turn_right_forward_right();
     } else {
       // green
-      rgbled.set(0, 255, 0);
+      rgbled.setColor(0, 255, 0);
       turn_right();
     }
   }

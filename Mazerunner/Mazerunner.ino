@@ -17,7 +17,8 @@ struct color {
 #define SHARP_INFRARED_THRESHOLD_L 400   // "too close to wall to adjust to left"
 #define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
 
-#define MIC_THRESHOLD 50                 // "loud enough to be considered not noise"
+#define MIC_THRESHOLD_LOW 300            // "loud enough to be considered not noise"
+#define MIC_THRESHOLD_HIGH 150           //
 #define MIC_DECIDE_LOW 200               // threshold value to decide that low is louder
 #define MIC_DECIDE_HIGH 100              // threshold value to decide that high is louder
 
@@ -25,11 +26,11 @@ struct color {
 #define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
 #define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
 #define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
-#define TURNING_SPEED 200                //
-#define TURN_DURATION 255                //
-#define TURN_DURATION2 400                //
+#define TURNING_SPEED 170                //
+#define TURN_DURATION 260                //
+#define TURN_DURATION2 300               //
 
-#define LED_DELAY 30                     // response time of LDR
+#define LED_DELAY 100                     // response time of LDR
 
 #define FORWARD_INTERVAL 1000            //
 
@@ -101,7 +102,6 @@ long read_ultrasonic_sensor() {
 
 struct color read_ldr_sensor() {
   struct color result;
-  result.c = analogAvgRead(LIGHT);
   rgbled.setColor(255, 0, 0);
   delay(LED_DELAY);
   result.r = analogAvgRead(LIGHT);
@@ -112,6 +112,8 @@ struct color read_ldr_sensor() {
   delay(LED_DELAY);
   result.b = analogAvgRead(LIGHT);
   rgbled.clear();
+  delay(LED_DELAY);
+  result.c = analogAvgRead(LIGHT);
   return result;
 }
 
@@ -162,6 +164,7 @@ void turn_right() {
 
 void turn_180() {
   turn_right();
+  delay(50);
   turn_right();
   return;
 }
@@ -169,10 +172,10 @@ void turn_180() {
 void move_forward() {    
   if (analogAvgRead(IR_L) < ir_shrp_tshold_l) {
     adjust_to_sharp_right();
-  } else if (analogAvgRead(IR_L) < ir_tshold_l) {
-    adjust_to_right();
   } else if (analogAvgRead(IR_R) < ir_shrp_tshold_r) {
     adjust_to_sharp_left();
+  } else if (analogAvgRead(IR_L) < ir_tshold_l) {
+    adjust_to_right();
   } else if (analogAvgRead(IR_R) < ir_tshold_r) {
     adjust_to_left();
   } else {
@@ -193,7 +196,9 @@ void turn_left_forward_left() {
   }
 
   //turn_left();
-
+  motor_r.stop();
+  motor_l.stop();
+  delay(100);
   motor_r.run(TURNING_SPEED);
   motor_l.run(MAX_SPEED);
   delay(TURN_DURATION2);
@@ -213,7 +218,9 @@ void turn_right_forward_right() {
   }
 
   //turn_right();
-
+  motor_r.stop();
+  motor_l.stop();
+  delay(100);
   motor_r.run(-MAX_SPEED);
   motor_l.run(-TURNING_SPEED);
   delay(TURN_DURATION2);
@@ -283,11 +290,14 @@ void loop_tune_2() {
   return;
 }
 
-float find_intensity_ratio(int color_a, int color_b, int clear) {
-  float intensity_a = log(1 - (float) color_a / 1023);
-  float intensity_b = log(1 - (float) color_b / 1023);
-  float intensity_c = log(1 - (float) clear / 1023);
-  return (intensity_a - intensity_c) / (intensity_b - intensity_c);
+void challenge_complete() {
+  play_note(NOTE_B6, 50, 0);
+  buzzer.tone(NOTE_E7, 350);
+  return;
+}
+
+float find_intensity(int value) {
+  return -log(1 - (float) value / 1023);
 }
 
 // challenge functions
@@ -302,15 +312,20 @@ float find_intensity_ratio(int color_a, int color_b, int clear) {
 bool solve_color() {
   struct color paper = read_ldr_sensor();
   float red_green = (float) paper.r / paper.g;
-  if (red_green > 2.05) { //2.1
-    // red
-    turn_left();
-  } else if (red_green > 1.6) {
-    // orange
-    turn_left_forward_left();
+  if (red_green > 1.6) {
+    if (find_intensity(paper.g) - find_intensity(paper.c) > 0.2) {
+      // orange 0.21
+      rgbled.set(170, 85, 0);
+      turn_left_forward_left();
+    } else {
+      // red 0.19
+      rgbled.set(255, 0, 0);
+      turn_left();
+    }
   } else if (red_green > 1.15) {
     if (paper.r > 400) {
       // white
+      rgbled.set(85, 85, 85);
       turn_180();
     } else {
       // black
@@ -319,10 +334,12 @@ bool solve_color() {
   } else {
     if (paper.b > paper.r) {
       // blue
+      rgbled.set(0, 0, 255);
       turn_right_forward_right();
     } else {
       // green
-      turn_left_forward_left();
+      rgbled.set(0, 255, 0);
+      turn_right();
     }
   }
   return true;
@@ -348,30 +365,27 @@ bool solve_sound() {
     mic_low = temp_low < mic_low ? temp_low : mic_low;
     delay(10);
   }
-  if (mic_high >= MIC_THRESHOLD) {
-    if (mic_low > mic_high + MIC_DECIDE_LOW) {
-      turn_left();
-    } else if (mic_high > mic_low + MIC_DECIDE_HIGH) {
-      turn_right();
-    } else {
-      // both are not louder than the other mic by MIC_DECIDE, 
-      // therefore, two sounds have the same amplitude.
-      turn_180();
-    }
-    return true;
-  } else {
+  if (mic_high < MIC_THRESHOLD_HIGH && MIC_LOW < MIC_THRESHOLD_LOW) {
     return false;
   }
+  if (mic_low > mic_high + MIC_DECIDE_LOW) {
+    turn_left();
+  } else if (mic_high > mic_low + MIC_DECIDE_HIGH) {
+    turn_right();
+  } else {
+    // both are not louder than the other mic by MIC_DECIDE, 
+    // therefore, two sounds have the same amplitude.
+    turn_180();
+  }
+  return true;
 }
 
 void finish_race() {
-  rgbled.setColor(100, 100, 100);
   start_tune();
   while (analogRead(BUTTON) > 10) {
     loop_tune_1();
     loop_tune_2();
   }
-  rgbled.clear();
   return;
 }
 
@@ -383,6 +397,7 @@ void solve_challenge() {
   if (!solve_color() && !solve_sound()) {
     finish_race();
   }
+  challenge_complete();
   return;
 }
 
@@ -409,30 +424,28 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
-  ir_tshold_l = calibrateIR(IR_L) / 10 * 9;
-  ir_tshold_r = calibrateIR(IR_R) / 10 * 9;
-  ir_shrp_tshold_l = ir_tshold_l / 10 * 7;
-  ir_shrp_tshold_r = ir_tshold_r / 10 * 7;
-
-  Serial.println(ir_tshold_l);
-  Serial.println(ir_tshold_r);
-  Serial.println(ir_shrp_tshold_l);
-  Serial.println(ir_shrp_tshold_r);
+  ir_tshold_l = calibrateIR(IR_L) * 0.95;
+  ir_tshold_r = calibrateIR(IR_R) * 0.95;
+  ir_shrp_tshold_l = ir_tshold_l * 0.8;
+  ir_shrp_tshold_r = ir_tshold_r * 0.8;
 }
 
 void loop() {
-  struct color test = read_ldr_sensor();
-  Serial.println(find_intensity_ratio(test.r, test.g, test.c));
-  delay(200);
-  /*
   // Stop moving and solve challenge if mBot reaches black line.
   if (digitalRead(LINE) == LOW) {
+    motor_l.stop();
+    motor_r.stop();
+    delay(100);
+    motor_l.run(ADJUSTMENT_SPEED);
+    motor_r.run(-ADJUSTMENT_SPEED);
+    delay(150);
     motor_l.stop();
     motor_r.stop();
     for (int i = 0; i < 10; i += 1) {
       delay(20);
       if (digitalRead(LINE) != LOW) {
         return;
+        delay(100);
       }
     }
     solve_challenge();
@@ -451,11 +464,15 @@ void loop() {
 
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
-     Serial.print("R");
+     Serial.print(find_intensity(test.g) - find_intensity(test.c));
+     Serial.print(find_intensity(test.g) - find_intensity(test.c) > 0.2 ? "Orange" : "Red");
+     Serial.print("\t");
+     Serial.print(test.c);
+     Serial.print("\t");
      Serial.print(test.r);
-     Serial.print(" G");
+     Serial.print("\t");
      Serial.print(test.g);
-     Serial.print(" B");
+     Serial.print("\t");
      Serial.print(test.b);
      Serial.println("");
      delay(1000);

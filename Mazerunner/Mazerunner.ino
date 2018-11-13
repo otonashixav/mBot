@@ -59,6 +59,11 @@ MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
+int ir_tshold_l;
+int ir_tshold_r;
+int ir_shrp_tshold_l;
+int ir_shrp_tshold_r; 
+
 // sensor functions
 
 /**
@@ -160,13 +165,13 @@ void turn_180() {
 }
 
 void move_forward() {    
-  if (analogAvgRead(IR_L) < SHARP_INFRARED_THRESHOLD_L) {
+  if (analogAvgRead(IR_L) < ir_shrp_tshold_l) {
     adjust_to_sharp_right();
-  } else if (analogAvgRead(IR_L) < INFRARED_THRESHOLD_L) {
+  } else if (analogAvgRead(IR_L) < ir_tshold_l) {
     adjust_to_right();
-  } else if (analogAvgRead(IR_R) < SHARP_INFRARED_THRESHOLD_R) {
+  } else if (analogAvgRead(IR_R) < ir_shrp_tshold_r) {
     adjust_to_sharp_left();
-  } else if (analogAvgRead(IR_R) < INFRARED_THRESHOLD_R) {
+  } else if (analogAvgRead(IR_R) < ir_tshold_r) {
     adjust_to_left();
   } else {
     motor_r.run(MAX_SPEED);
@@ -308,7 +313,7 @@ bool solve_color() {
       turn_right_forward_right();
     } else {
       // green
-      turn_right();
+      turn_left_forward_left();
     }
   }
   return true;
@@ -372,6 +377,15 @@ void solve_challenge() {
   return;
 }
 
+int calibrateIR(int pin) {
+  int sum = 0;
+  for (int i = 0; i < 32; i += 1) {
+    sum += analogRead(pin);
+    delay(10);
+  }
+  return sum / 32; // rounds down but negligible for our purposes 
+}
+
 void setup() {
   Serial.begin(9600);
   pinMode(IR_L, INPUT);
@@ -386,6 +400,15 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
+  ir_tshold_l = calibrateIR(IR_L) /10 *9;
+  ir_tshold_r = calibrateIR(IR_R) /10 *9;
+  ir_shrp_tshold_l = ir_tshold_l /10 *7
+    ir_shrp_tshold_r = ir_tshold_r /10 *7;
+
+  Serial.println(ir_tshold_l);
+  Serial.println(ir_tshold_r);
+  Serial.println(ir_shrp_tshold_l);
+  Serial.println(ir_shrp_tshold_r);
 }
 
 void loop() {
@@ -404,25 +427,31 @@ void loop() {
     // the IR sensors.
   } else {
     move_forward();
-  }/*
-      Serial.print("Low: ");
-      Serial.print(analogAvgRead(MIC_LOW));
-      Serial.print(" High: ");
-      Serial.println(analogAvgRead(MIC_HIGH));
-      delay(500);
+  }
+
+  /* DEBUG: Mic Test
+     Serial.print("Low: ");
+     Serial.print(analogAvgRead(MIC_LOW));
+     Serial.print(" High: ");
+     Serial.prin8tln(analogAvgRead(MIC_HIGH));
+     delay(500);*/
+
   /* DEBUG: Color Test
-  struct color test = read_ldr_sensor();
-  Serial.print("R");
-  Serial.print(test.r);
-  Serial.print(" G");
-  Serial.print(test.g);
-  Serial.print(" B");
-  Serial.print(test.b);
-  Serial.println("");
-  delay(1000);*/
+     struct color test = read_ldr_sensor();
+     Serial.print("R");
+     Serial.print(test.r);
+     Serial.print(" G");
+     Serial.print(test.g);
+     Serial.print(" B");
+     Serial.print(test.b);
+     Serial.println("");
+     delay(1000);*/
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());
-     delay(1000);
-   */
+     delay(1000);*/
+
+
+
+
 }

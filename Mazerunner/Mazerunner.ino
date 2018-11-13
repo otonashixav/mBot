@@ -32,7 +32,6 @@ struct color {
 #define TURN_SPEED_MULTIPLIER 0.8        // multiplier
 
 #define LED_DELAY 30                     // response time of LDR
-#define ORANGE_THRESHOLD 0.2f            // 
 
 #define FORWARD_INTERVAL 1000            //
 
@@ -314,7 +313,7 @@ bool solve_color() {
   struct color paper = read_ldr_sensor();
   float red_green = (float) paper.r / paper.g;
   if (red_green > 1.6) {
-    if (find_intensity(paper.g) - find_intensity(paper.c) > ORANGE_THRESHOLD) {
+    if ((find_intensity(paper.g) - find_intensity(paper.c)) > 0.2) {
       // orange 0.21
       rgbled.setColor(128, 64, 0);
       turn_left_forward_left();
@@ -355,23 +354,23 @@ bool solve_color() {
  *          false otherwise.
  */
 bool solve_sound() {
-  int mic_low = analogAvgRead(MIC_LOW);
-  int mic_high = analogAvgRead(MIC_HIGH);
+  int low_freq = analogAvgRead(MIC_LOW);
+  int high_freq = analogAvgRead(MIC_HIGH);
   int temp_high;
   int temp_low;
   for (int i = 1; i < 10; i += 1) {
     temp_high = analogAvgRead(MIC_HIGH);
     temp_low = analogAvgRead(MIC_LOW);
-    mic_high = temp_high < mic_high ? temp_high : mic_high;
-    mic_low = temp_low < mic_low ? temp_low : mic_low;
+    high_freq = temp_high < high_freq ? temp_high : high_freq;
+    low_freq = temp_low < low_freq ? temp_low : low_freq;
     delay(10);
   }
-  if (mic_high < MIC_THRESHOLD_HIGH && MIC_LOW < MIC_THRESHOLD_LOW) {
+  if (high_freq < MIC_THRESHOLD_HIGH && low_freq < MIC_THRESHOLD_LOW) {
     return false;
   }
-  if (mic_low > mic_high + MIC_DECIDE_LOW) {
+  if (low_freq > high_freq + MIC_DECIDE_LOW) {
     turn_left();
-  } else if (mic_high > mic_low + MIC_DECIDE_HIGH) {
+  } else if (high_freq > low_freq + MIC_DECIDE_HIGH) {
     turn_right();
   } else {
     // both are not louder than the other mic by MIC_DECIDE, 
@@ -383,7 +382,7 @@ bool solve_sound() {
 
 void finish_race() {
   start_tune();
-  while (analogRead(BUTTON) > 10) {
+  while (1) {
     loop_tune_1();
     loop_tune_2();
   }
@@ -397,9 +396,14 @@ void finish_race() {
 void solve_challenge() {
   motor_l.stop();
   motor_r.stop();
-  delay(70);
   rgbled.clear();
-  delay(LED_DELAY);
+  delay(150);
+  motor_l.run(ADJUSTMENT_SPEED);
+  motor_r.run(-ADJUSTMENT_SPEED);
+  delay(100);
+  motor_l.stop();
+  motor_r.stop();
+  delay(100);
   if (!solve_color() && !solve_sound()) {
     finish_race();
   }
@@ -473,7 +477,7 @@ void loop() {
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
      Serial.print(find_intensity(test.g) - find_intensity(test.c), 7);
-     Serial.print(find_intensity(test.g) - find_intensity(test.c) > ORANGE_THRESHOLD ? "Orange" : "Red");
+     Serial.print(find_intensity(test.g) - find_intensity(test.c) > 0.2 ? "Orange" : "Red");
      Serial.print("\t");
      Serial.print(test.c);
      Serial.print("\t");

@@ -309,7 +309,7 @@ void challenge_complete() {
 void debug_record(int values[LOG_COL - 1]) {
   int curr = debug_curr % LOG_CAP;
   debug_log[curr][0] = debug_curr;
-  for (int col = 0; col < LOG_COL; col += 1) {
+  for (int col = 0; col < LOG_COL - 1; col += 1) {
     debug_log[curr][col + 1] = values[col];
   }
   debug_curr += 1;

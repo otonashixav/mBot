@@ -87,8 +87,7 @@ int analogAvgRead(int pin) {
 /**
  * Sends an ultrasonic pulse and waits for the echo. The timeout is defined
  * by ULTRASONIC_TIMEOUT. Returns the time in microseconds before the echo is
- * heard. Consider replacing with boolean function for "close enough to wall"
- * to save time and space? 
+ * heard. 
  * 
  * @return  Time taken for the ultrasonic pulse to return in microseconds.
  */
@@ -101,6 +100,16 @@ long read_ultrasonic_sensor() {
   return pulseIn(ULTRASONIC, HIGH, ULTRASONIC_TIMEOUT);
 }
 
+/**
+ * Reads the voltage from the LIGHT pin 4 times under different lighting
+ * conditions provided by the mBot's onboard LEDs: No light, red light, 
+ * green light and blue light, storing and returning the information as a 
+ * struct color. LDR response time is accounted for using delay for a duration
+ * specified by LED_DELAY. 
+ * 
+ * @return result  A struct color containing the 4 values corresponding to
+ *                 the colors read. 
+ */
 struct color read_ldr_sensor() {
   struct color result;
   result.c = analogAvgRead(LIGHT);
@@ -118,32 +127,45 @@ struct color read_ldr_sensor() {
 }
 
 // motor functions
-
+/**
+ * Sets the mBot's motors such that it turns slightly to the left.
+ */
 void adjust_to_left() {
   motor_r.run(MAX_SPEED);
   motor_l.run(-ADJUSTMENT_SPEED);
   return;
 }
 
+/**
+ * Sets the mBot's motors such that it turns slightly to the right.
+ */
 void adjust_to_right() {
   motor_r.run(ADJUSTMENT_SPEED);
   motor_l.run(-MAX_SPEED);
   return;
 }
 
-
+/**
+ * Sets the mBot's motors such that it turns sharply to the left.
+ */
 void adjust_to_sharp_left() {
   motor_r.run(MAX_SPEED);
   motor_l.run(-SHARP_ADJUSTMENT_SPEED);
   return;
 }
 
+/**
+ * Sets the mBot's motors such that it turns sharply to the right.
+ */
 void adjust_to_sharp_right() {
   motor_r.run(SHARP_ADJUSTMENT_SPEED);
   motor_l.run(-MAX_SPEED);
   return;
 }
 
+/**
+ * Turns the mBot 90 degrees to the left.
+ */
 void turn_left() {
   motor_r.run(TURNING_SPEED * TURN_SPEED_MULTIPLIER);
   motor_l.run(MAX_SPEED * TURN_SPEED_MULTIPLIER);
@@ -153,6 +175,9 @@ void turn_left() {
   return;
 }
 
+/**
+ * Turns the mBot 90 degrees to the right.
+ */
 void turn_right() {
   motor_r.run(-MAX_SPEED * TURN_SPEED_MULTIPLIER);
   motor_l.run(-TURNING_SPEED * TURN_SPEED_MULTIPLIER);
@@ -162,6 +187,9 @@ void turn_right() {
   return;
 }
 
+/**
+ * Turns the mBot 180 degrees to the right.
+ */
 void turn_180() {
   turn_right();
   delay(50);
@@ -169,6 +197,10 @@ void turn_180() {
   return;
 }
 
+/**
+ * Moves the mBot forward, reading the IR sensors to determine the ideal
+ * direction of movement. 
+ */
 void move_forward() {    
   if (analogAvgRead(IR_L) < ir_shrp_tshold_l) {
     adjust_to_sharp_right();
@@ -185,7 +217,11 @@ void move_forward() {
   return;
 }
 
-// TODO: Review below code. //consider put move_forward() function into the while loop?
+/**
+ * Rotates the mBot 90 degrees to the left, then moves it forward until the
+ * ultrasonic sensor returns a value below ULTRASONIC_THRESHOLD, then rotates
+ * the mBot 90 degrees to the left again. 
+ */
 void turn_left_forward_left() {
   turn_left();
   move_forward();
@@ -207,7 +243,11 @@ void turn_left_forward_left() {
   return;
 }
 
-
+/**
+ * Rotates the mBot 90 degrees to the right, then moves it forward until the
+ * ultrasonic sensor returns a value below ULTRASONIC_THRESHOLD, then rotates
+ * the mBot 90 degrees to the right again. 
+ */
 void turn_right_forward_right() {
   turn_right();
   move_forward();
@@ -230,7 +270,12 @@ void turn_right_forward_right() {
 }
 
 // victory theme
-
+/**
+ * Plays a note for a set duration, then waits for another duration
+ * after the note has been played. The playback duration can be 
+ * adjusted using MUSIC_ADJUST and MUSIC_SPEED, which reduce the 
+ * duration by a constant and a percentage respectively.
+ */
 void play_note(int note, int duration, int wait) {
   duration /= MUSIC_SPEED;
   wait /= MUSIC_SPEED;
@@ -239,6 +284,9 @@ void play_note(int note, int duration, int wait) {
   return;
 }
 
+/**
+ * The starting verse of victory fanfare
+ */
 void start_tune() {
   play_note(NOTE_C6, 80, 80);
   play_note(NOTE_C6, 80, 80);
@@ -252,6 +300,9 @@ void start_tune() {
   return;
 }
 
+/**
+ * The first half of the looping portion of victory fanfare.
+ */
 void loop_tune_1() {
   play_note(NOTE_G5, 480, 0);
   play_note(NOTE_F5, 480, 0);
@@ -271,6 +322,9 @@ void loop_tune_1() {
   return;
 }
 
+/**
+ * The second half of the looping portion of victory fanfare.
+ */
 void loop_tune_2() {
   play_note(NOTE_G5, 480, 0);
   play_note(NOTE_F5, 480, 0);
@@ -290,12 +344,26 @@ void loop_tune_2() {
   return;
 }
 
+/**
+ * Plays the mario coin sound effect
+ */
 void challenge_complete() {
   play_note(NOTE_B6, 50, 0);
   buzzer.tone(NOTE_E7, 350);
   return;
 }
 
+/**
+ * Converts a voltage to an equivalent value directly proportional to 
+ * light intensity hitting the LDR. Note that the formula has not been
+ * experimentally proven, and assumes that the relationship between the
+ * voltage and intensity resembles a curve similar to that of a charging
+ * capacitor, with intensity replacing time. 
+ * 
+ * @param[in] value  The voltage read from the LIGHT pin
+ * @return           A value directly proportional to light intensity hitting
+ *                   the LDR. 
+ */
 float find_intensity(int value) {
   return -log(1 - (float) value / 1023);
 }

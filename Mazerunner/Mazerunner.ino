@@ -9,34 +9,26 @@ struct color {
 };
 
 // constant definitions
-#define ULTRASONIC_TIMEOUT 30000         // timeout for pulseIn
-#define ULTRASONIC_THRESHOLD 600         // "close enough to wall to turn"
+#define ULTRASONIC_TIMEOUT 30000    // timeout for pulseIn (in us)
+#define ULTRASONIC_THRESHOLD 600    // threshold below which to turn for double turns (in ms)
 
-#define INFRARED_THRESHOLD_L 650         // "close enough to wall to adjust to left" PREV: 550
-#define INFRARED_THRESHOLD_R 650         // "close enough to wall to adjust to right" PREV: 550
-#define SHARP_INFRARED_THRESHOLD_L 400   // "too close to wall to adjust to left"
-#define SHARP_INFRARED_THRESHOLD_R 400   // "too close to wall to adjust to right"
+#define MIC_THRESHOLD_LOW 300       // threshold value to count as signal for lower frequency
+#define MIC_THRESHOLD_HIGH 150      // threshold value to count as signal for higher frequency
+#define MIC_DECIDE_LOW 200          // threshold value to decide that low is louder
+#define MIC_DECIDE_HIGH 100         // threshold value to decide that high is louder
 
-#define MIC_THRESHOLD_LOW 300            // "loud enough to be considered not noise"
-#define MIC_THRESHOLD_HIGH 150           //
-#define MIC_DECIDE_LOW 200               // threshold value to decide that low is louder
-#define MIC_DECIDE_HIGH 100              // threshold value to decide that high is louder
+#define MAX_SPEED 255               // max speed of motors
+#define ADJUSTMENT_SPEED 200        // speed to use when adjusting direction
+#define SHARP_ADJUSTMENT_SPEED 150  // speed to use when too close to wall
+#define TURNING_SPEED 170           // speed to use for single turns (in ms)
+#define TURN_DURATION 250           // delay to use for single turns (in ms)
+#define TURN_DURATION2 285          // delay to use for second turn of double turn (in ms)
+#define TURN_SPEED_MULTIPLIER 0.8   // multiplier on turn speed for all turns
 
-#define MAX_SPEED 255                    // max speed of motors
-#define ADJUSTMENT_SPEED 200             // speed to use when adjusting direction
-#define SHARP_ADJUSTMENT_SPEED 150       // speed to use when too close to wall
-#define ADJUSTMENT_DELAY 1000            // time to stay at adjustment speed
-#define TURNING_SPEED 170                //
-#define TURN_DURATION 250                //
-#define TURN_DURATION2 285               //
-#define TURN_SPEED_MULTIPLIER 0.8        // multiplier
+#define LED_DELAY 30                // response time of LDR (in ms)
 
-#define LED_DELAY 30                     // response time of LDR
-
-#define FORWARD_INTERVAL 1000            //
-
-#define MUSIC_SPEED 1                    // default 1 (normal speed)
-#define MUSIC_ADJUST 20                  // play notes for this duration less than their full duration (in ms)
+#define MUSIC_SPEED 1               // default 1 (normal speed)
+#define MUSIC_ADJUST 20             // play notes for this duration less than their full duration (in ms)
 
 // pin definitions
 // Port 1 contains 2 digital pins 11 and 12
@@ -62,10 +54,10 @@ MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
-int ir_tshold_l;
-int ir_tshold_r;
-int ir_shrp_tshold_l;
-int ir_shrp_tshold_r; 
+int ir_threshold_l;
+int ir_threshold_r;
+int ir_sharp_threshold_l;
+int ir_sharp_threshold_r; 
 
 // sensor functions
 
@@ -202,13 +194,13 @@ void turn_180() {
  * direction of movement. 
  */
 void move_forward() {    
-  if (analogAvgRead(IR_L) < ir_shrp_tshold_l) {
+  if (analogAvgRead(IR_L) < ir_sharp_threshold_l) {
     adjust_to_sharp_right();
-  } else if (analogAvgRead(IR_R) < ir_shrp_tshold_r) {
+  } else if (analogAvgRead(IR_R) < ir_sharp_threshold_r) {
     adjust_to_sharp_left();
-  } else if (analogAvgRead(IR_L) < ir_tshold_l) {
+  } else if (analogAvgRead(IR_L) < ir_threshold_l) {
     adjust_to_right();
-  } else if (analogAvgRead(IR_R) < ir_tshold_r) {
+  } else if (analogAvgRead(IR_R) < ir_threshold_r) {
     adjust_to_left();
   } else {
     motor_r.run(MAX_SPEED);
@@ -441,7 +433,7 @@ bool solve_sound() {
   } else if (high_freq > low_freq + MIC_DECIDE_HIGH) {
     turn_right();
   } else {
-    // both are not louder than the other mic by MIC_DECIDE, 
+    // both are not louder than the other mic by the respective differences, 
     // therefore, two sounds have the same amplitude.
     turn_180();
   }
@@ -502,10 +494,10 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
-  ir_tshold_l = calibrateIR(IR_L) * 0.95;
-  ir_tshold_r = calibrateIR(IR_R) * 0.95;
-  ir_shrp_tshold_l = ir_tshold_l * 0.8;
-  ir_shrp_tshold_r = ir_tshold_r * 0.8;
+  ir_threshold_l = calibrateIR(IR_L) * 0.95;
+  ir_threshold_r = calibrateIR(IR_R) * 0.95;
+  ir_sharp_threshold_l = ir_threshold_l * 0.8;
+  ir_sharp_threshold_r = ir_threshold_r * 0.8;
 }
 
 void loop() {
@@ -539,8 +531,9 @@ void loop() {
      Serial.print("Low: ");
      Serial.print(analogAvgRead(MIC_LOW));
      Serial.print(" High: ");
-     Serial.prin8tln(analogAvgRead(MIC_HIGH));
-     delay(500);*/
+     Serial.println(analogAvgRead(MIC_HIGH));
+     delay(500);
+  */
 
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
@@ -556,8 +549,10 @@ void loop() {
      Serial.print(test.b);
      Serial.println("");
      delay(1000);
+  */
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());
-     delay(1000);*/
+     delay(1000);
+  */
 }

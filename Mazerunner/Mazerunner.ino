@@ -57,13 +57,13 @@ struct color {
 int ir_threshold_l;
 int ir_threshold_r;
 int ir_sharp_threshold_l;
-int ir_sharp_threshold_r; 
+int ir_sharp_threshold_r;
 
 // sensor functions
 /**
  * Reads the analog output of a pin 5 times, and returns the average value
- * rounded down to the nearest integer. 
- * 
+ * rounded down to the nearest integer.
+ *
  * @param[in] pin  The pin to read
  * @return         The average value of 5 readings from the pin
  */
@@ -72,14 +72,14 @@ int analogAvgRead(int pin) {
   for (int i = 0; i < 10; i += 1) {
     sum += analogRead(pin);
   }
-  return sum / 10; // rounds down but negligible for our purposes 
+  return sum / 10; // rounds down but negligible for our purposes
 }
 
 /**
  * Sends an ultrasonic pulse and waits for the echo. The timeout is defined
  * by ULTRASONIC_TIMEOUT. Returns the time in microseconds before the echo is
- * heard. 
- * 
+ * heard.
+ *
  * @return  Time taken for the ultrasonic pulse to return in microseconds.
  */
 long read_ultrasonic_sensor() {
@@ -93,13 +93,13 @@ long read_ultrasonic_sensor() {
 
 /**
  * Reads the voltage from the LIGHT pin 4 times under different lighting
- * conditions provided by the mBot's onboard LEDs: No light, red light, 
- * green light and blue light, storing and returning the information as a 
+ * conditions provided by the mBot's onboard LEDs: No light, red light,
+ * green light and blue light, storing and returning the information as a
  * struct color. LDR response time is accounted for using delay for a duration
- * specified by LED_DELAY. 
- * 
+ * specified by LED_DELAY.
+ *
  * @return result  A struct color containing the 4 values corresponding to
- *                 the colors read. 
+ *                 the colors read.
  */
 struct color read_ldr_sensor() {
   struct color result;
@@ -190,9 +190,9 @@ void turn_180() {
 
 /**
  * Moves the mBot forward, reading the IR sensors to determine the ideal
- * direction of movement. 
+ * direction of movement.
  */
-void move_forward() {    
+void move_forward() {
   if (analogAvgRead(IR_L) < ir_sharp_threshold_l) {
     adjust_to_sharp_right();
   } else if (analogAvgRead(IR_R) < ir_sharp_threshold_r) {
@@ -211,7 +211,7 @@ void move_forward() {
 /**
  * Rotates the mBot 90 degrees to the left, then moves it forward until the
  * ultrasonic sensor returns a value below ULTRASONIC_THRESHOLD, then rotates
- * the mBot 90 degrees to the left again. 
+ * the mBot 90 degrees to the left again.
  */
 void turn_left_forward_left() {
   turn_left();
@@ -239,7 +239,7 @@ void turn_left_forward_left() {
 /**
  * Rotates the mBot 90 degrees to the right, then moves it forward until the
  * ultrasonic sensor returns a value below ULTRASONIC_THRESHOLD, then rotates
- * the mBot 90 degrees to the right again. 
+ * the mBot 90 degrees to the right again.
  */
 void turn_right_forward_right() {
   turn_right();
@@ -267,8 +267,8 @@ void turn_right_forward_right() {
 // victory theme
 /**
  * Plays a note for a set duration, then waits for another duration
- * after the note has been played. The playback duration can be 
- * adjusted using MUSIC_ADJUST and MUSIC_SPEED, which reduce the 
+ * after the note has been played. The playback duration can be
+ * adjusted using MUSIC_ADJUST and MUSIC_SPEED, which reduce the
  * duration by a constant and a percentage respectively.
  */
 void play_note(int note, int duration, int wait) {
@@ -349,15 +349,15 @@ void challenge_complete() {
 }
 
 /**
- * Converts a voltage to an equivalent value directly proportional to 
+ * Converts a voltage to an equivalent value directly proportional to
  * light intensity hitting the LDR. Note that the formula has not been
  * experimentally proven, and assumes that the relationship between the
  * voltage and intensity resembles a curve similar to that of a charging
- * capacitor, with intensity replacing time. 
- * 
+ * capacitor, with intensity replacing time.
+ *
  * @param[in] value  The voltage read from the LIGHT pin
  * @return           A value directly proportional to light intensity hitting
- *                   the LDR. 
+ *                   the LDR.
  */
 float find_intensity(int value) {
   return -log(1 - (float) value / 1023);
@@ -368,7 +368,7 @@ float find_intensity(int value) {
  * Attempts to solve the color challenge, then calls the appropriate function
  * to move the mBot accordingly. Returns true if a challenge was found and
  * solved, and false otherwise.
- * 
+ *
  * @return  True if color was detected and the appropriate action taken, and
  *          false otherwise.
  */
@@ -412,7 +412,7 @@ bool solve_color() {
  * Attempts to solve the sound challenge, then calls the appropriate function
  * to move the mBot accordingly. Returns true if a challenge was found and
  * solved, and false otherwise.
- * 
+ *
  * @return  True if instruction sounds were detected and the appropriate action taken, and
  *          false otherwise.
  */
@@ -436,7 +436,7 @@ bool solve_sound() {
   } else if (high_freq > low_freq + MIC_DECIDE_HIGH) {
     turn_right();
   } else {
-    // both are not louder than the other mic by the respective differences, 
+    // both are not louder than the other mic by the respective differences,
     // therefore, two sounds have the same amplitude.
     turn_180();
   }
@@ -491,7 +491,7 @@ int calibrate_ir(int pin) {
     sum += analogRead(pin);
     delay(10);
   }
-  return sum / 32; // rounds down but negligible for our purposes 
+  return sum / 32; // rounds down but negligible for our purposes
 }
 
 void setup() {

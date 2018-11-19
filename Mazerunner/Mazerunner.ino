@@ -1,13 +1,6 @@
 #include "pitches.h"   // note definitions for playing MUSIC
 #include "mCore.h"     // mcore
 
-struct color {
-  int c;
-  int r;
-  int g;
-  int b;
-};
-
 // constant definitions
 #define ULTRASONIC_TIMEOUT 30000    // timeout for pulseIn (in us)
 #define ULTRASONIC_THRESHOLD 600    // threshold below which to turn for double turns (in ms)
@@ -54,13 +47,19 @@ MeDCMotor motor_r(MOTOR_R);
 MeRGBLed rgbled(LED);
 MeBuzzer buzzer(BUZZER);
 
+struct color {
+  int c;
+  int r;
+  int g;
+  int b;
+};
+
 int ir_threshold_l;
 int ir_threshold_r;
 int ir_sharp_threshold_l;
 int ir_sharp_threshold_r; 
 
 // sensor functions
-
 /**
  * Reads the analog output of a pin 5 times, and returns the average value
  * rounded down to the nearest integer. 
@@ -227,6 +226,8 @@ void turn_left_forward_left() {
   motor_r.stop();
   motor_l.stop();
   delay(100);
+
+  // second turn
   motor_r.run(TURNING_SPEED * TURN_SPEED_MULTIPLIER);
   motor_l.run(MAX_SPEED * TURN_SPEED_MULTIPLIER);
   delay(TURN_DURATION2 / TURN_SPEED_MULTIPLIER);
@@ -253,6 +254,8 @@ void turn_right_forward_right() {
   motor_r.stop();
   motor_l.stop();
   delay(100);
+
+  // second turn
   motor_r.run(-MAX_SPEED * TURN_SPEED_MULTIPLIER);
   motor_l.run(-TURNING_SPEED * TURN_SPEED_MULTIPLIER);
   delay(TURN_DURATION2 / TURN_SPEED_MULTIPLIER);
@@ -277,7 +280,7 @@ void play_note(int note, int duration, int wait) {
 }
 
 /**
- * The starting verse of victory fanfare
+ * The starting verse of victory fanfare.
  */
 void start_tune() {
   play_note(NOTE_C6, 80, 80);
@@ -337,7 +340,7 @@ void loop_tune_2() {
 }
 
 /**
- * Plays the mario coin sound effect
+ * Plays the mario coin sound effect.
  */
 void challenge_complete() {
   play_note(NOTE_B6, 50, 0);
@@ -410,7 +413,7 @@ bool solve_color() {
  * to move the mBot accordingly. Returns true if a challenge was found and
  * solved, and false otherwise.
  * 
- * @return  true if instruction sounds were detected and the appropriate action taken, and
+ * @return  True if instruction sounds were detected and the appropriate action taken, and
  *          false otherwise.
  */
 bool solve_sound() {
@@ -440,6 +443,9 @@ bool solve_sound() {
   return true;
 }
 
+/**
+ * Continuously plays the celebratory tune.
+ */
 void finish_race() {
   start_tune();
   while (1) {
@@ -450,8 +456,9 @@ void finish_race() {
 }
 
 /**
- * Attempts to decide which challenge it needs to solve, then calls the appropriate function
- * to solve the challenge. Play the celebratory tune at the end of the maze
+ * Attempts to solve a challenge by trying color and then sound. Plays the
+ * celebratory tune if no actions were taken, which means the end of the race
+ * has been reached.
  */
 void solve_challenge() {
   motor_l.stop();
@@ -471,6 +478,13 @@ void solve_challenge() {
   return;
 }
 
+/**
+ * Reads the analog output of a pin 32 times, and returns the average value
+ * rounded down to the nearest integer. Intended for calibrating the IR sensor.
+ *
+ * @param[in] pin  The pin to read
+ * @return         The average value of 32 readings from the pin
+ */
 int calibrateIR(int pin) {
   int sum = 0;
   for (int i = 0; i < 32; i += 1) {
@@ -533,7 +547,7 @@ void loop() {
      Serial.print(" High: ");
      Serial.println(analogAvgRead(MIC_HIGH));
      delay(500);
-  */
+   */
 
   /* DEBUG: Color Test
      struct color test = read_ldr_sensor();
@@ -549,10 +563,10 @@ void loop() {
      Serial.print(test.b);
      Serial.println("");
      delay(1000);
-  */
+   */
 
   /* DEBUG: Ultrasonic Sensors
      Serial.println(read_ultrasonic_sensor());
      delay(1000);
-  */
+   */
 }

@@ -485,7 +485,7 @@ void solve_challenge() {
  * @param[in] pin  The pin to read
  * @return         The average value of 32 readings from the pin
  */
-int calibrateIR(int pin) {
+int calibrate_ir(int pin) {
   int sum = 0;
   for (int i = 0; i < 32; i += 1) {
     sum += analogRead(pin);
@@ -508,8 +508,8 @@ void setup() {
   while (analogRead(BUTTON) > 10) {
     delay(10);
   }
-  ir_threshold_l = calibrateIR(IR_L) * 0.95;
-  ir_threshold_r = calibrateIR(IR_R) * 0.95;
+  ir_threshold_l = calibrate_ir(IR_L) * 0.95;
+  ir_threshold_r = calibrate_ir(IR_R) * 0.95;
   ir_sharp_threshold_l = ir_threshold_l * 0.8;
   ir_sharp_threshold_r = ir_threshold_r * 0.8;
 }
